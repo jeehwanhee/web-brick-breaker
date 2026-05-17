@@ -1,0 +1,78 @@
+* {
+	padding:0;
+	margin: 0;
+}
+
+body {
+	margin: 48px auto;
+	width: 1080px;
+}
+section > div {
+	display: flex;
+	flex-direction: column;
+	height: 1200px;
+	align-items: center;
+}
+
+footer {
+	width: 1080px;
+	text-align: center;
+}
+
+.hide {
+	display: none;
+}
+
+.title {
+
+}
+
+.text1 {
+	font-size: 36px;
+	text-align: center;
+	margin: 36px 0;
+}
+
+.text2 {
+	width: 1000px;
+	font-size: 16px;
+	margin: 8px 0;
+}
+
+.mainBtn {
+	width: 160px;
+	height: 48px;
+	line-height: 48px;
+	font-size: 24px;
+	text-align: center;
+	margin: 36px 0;
+	border: 1px solid black;
+}
+
+.subBtn1 {
+	width: 160px;
+	height: 48px;
+	line-height: 48px;
+	font-size: 20px;
+	text-align: center;
+	margin: 18px 0;
+}
+
+.subBtn2 {
+
+}
+
+#canvas {
+	background: gray;
+    border: 1px dotted black;
+}
+
+#selectLevel {
+	display: flex;
+	flex-direction: row;
+}
+
+.selected {
+	color: red;
+	font-size: 24px;
+}

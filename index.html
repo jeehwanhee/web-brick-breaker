@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>벽돌깨기</title>
+	<link type="text/css" rel="stylesheet" href="style.css">
+	<script src="main.js"></script>
+	<script src="game.js"></script>
+</head>
+<body>
+	<section>
+		<div id="initScreen">
+			<p class="title">벽돌깨기</p>
+			<div id="startGameButton" class="mainBtn">게임 시작</div>
+			<div id="settingButton" class="mainBtn">환경 설정</div>
+		</div>
+		<div id="startGameScreen">
+			<p class="text1">스테이지 설정</p>
+			<img id="levelImg" src="#" alt="보스이미지">
+			<div id="selectLevel">
+				<div class="subBtn1">1단계</div>
+				<div class="subBtn1">2단계</div>
+				<div class="subBtn1">3단계</div>
+			</div>
+
+			<div id="gameButton" class="mainBtn">게임 시작</div>
+			<div class="backBtn subBtn1">뒤로가기</div>
+		</div>
+		<div id="gameScreen">
+			<p id="life" class="text2">내 체력 : 100 / 100</p>
+			<p id="count" class="text2">남은 부메랑 : 5</p>
+
+			<canvas id="canvas" width="1000" height="800"></canvas>
+			<div id="controlButton" class="subBtn1">start</div>
+			<div class="backBtn subBtn1">뒤로가기</div>
+		</div>
+		<div id="settingScreen">
+			<div class="backBtn subBtn1">뒤로가기</div>
+		</div>
+	</section>
+	<footer>
+		2026 1학기 웹프 팀프로젝트 
+	</footer>
+</body>
+</html>
