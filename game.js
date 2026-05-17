@@ -1,5 +1,6 @@
-/*main.js의 전역변수
+/*main.js, gameConfig.js의 전역변수
 let level = 1;
+let bricks = [];
 */
 
 let rightPressed = false;
@@ -7,6 +8,7 @@ let leftPressed = false;
 
 let ball = null;
 let bar = null;
+let skills = []; //처리를 어떻게 해야할 지 고민
 
 let canvas = null;
 let context = null;
@@ -16,16 +18,24 @@ let canvasHeight = null;
 let isRunning = false;
 let animationId;
 
-let life = 100;
-let count = 5;
+let life;
+let count;
+let power;
 
-window.addEventListener("load", ()=>{
-	canvas = document.querySelector('#canvas');
+window.addEventListener("load", () => {
+    const gameButton = document.querySelector("#gameButton");
+    gameButton.addEventListener("click", () => {
+        initScreen();
+        initAnimation();
+        screenMove("gameScreen");
+    });
+
+    screenBack();
+	
+    canvas = document.querySelector('#canvas');
     context = canvas.getContext('2d');
     canvasWidth = canvas.width;
     canvasHeight = canvas.height;
-	
-	initAnimation();
 
     document.addEventListener("keydown", (e) => {
 	    if (e.key === "Right" || e.key === "ArrowRight") 
@@ -56,85 +66,14 @@ window.addEventListener("load", ()=>{
     });
 });
 
-class Ball {
-    constructor(x, y, dx, dy, color)
-    {
-        this.x = x;
-        this.y = y;
-        this.dx = dx;
-        this.dy = dy;
-        this.radius = 10;
-        this.color = color;
-    }
-
-    draw() {
-        context.beginPath();
-        context.fillStyle = this.color;
-        context.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
-        context.fill();
-        context.closePath();
-    }
-
-    update() {
-        if (this.x < this.radius || this.x > canvasWidth - this.radius) {
-            this.dx = -this.dx;
-        }
-        if (this.y < this.radius) {
-            this.dy = -this.dy;
-        }
-
-        //바에 부딪혔을 때
-        if (this.y > canvasHeight - this.radius - bar.height && (this.x - this.radius >= bar.x && this.x + this.radius <= bar.x + bar.width)) {
-        	this.dy = -this.dy;
-        }
-
-        //바닥에 닿았을 때
-        if (this.y > canvasHeight - this.radius) {
-        	count -= 1;
-        	updateUi();
-        	initAnimation();
-        }
-
-        //벽돌에 부딪혔을 때
-
-
-
-
-
-        this.x += this.dx;
-        this.y += this.dy;
-        this.draw();
-    }
-}
-
-class Bar {
-    constructor() {
-        this.width = 150;
-        this.height = 10;
-        this.speed = 7;
-        
-        this.x = (canvasWidth - this.width) / 2;
-        this.y = canvasHeight - this.height - 10;
-    }
-
-    draw() {
-        context.beginPath();
-        context.rect(this.x, this.y, this.width, this.height);
-        context.fillStyle = "#0095DD";
-        context.fill();
-        context.closePath();
-    }
-
-    update() {
-        if (rightPressed && this.x < canvasWidth - this.width) {
-            this.x += this.speed;
-        } else if (leftPressed && this.x > 0) {
-            this.x -= this.speed;
-        }
-
-        this.draw();
-    }
-}
+const initScreen = () => {
+    //난이도 선택으로 결정되는 전역변수 등등
+    
+    life = 100;
+    count = 5;
+    power = 20;
+    level1Bricks();
+};
 
 const initAnimation = () => {
     const x = canvasWidth / 2;
@@ -155,6 +94,9 @@ const animate = () => {
     context.clearRect(0, 0, canvasWidth, canvasHeight);
     ball.update();
     bar.update();
+    bricks.forEach((brick) => {
+        brick.draw();
+    });
     animationId = requestAnimationFrame(animate);
 };
 
@@ -170,3 +112,19 @@ const updateUi = () => {
 	lifeText.innerText = `내 체력 : ${life} / 100`;
 	countText.innerText = `남은 부메랑 : ${count}`;
 };
+
+
+const screenBack = () => {
+    const gameScreen = document.querySelector("#gameScreen");
+
+    const backButton = gameScreen.querySelector(".backBtn");
+    backButton.addEventListener("click", () => {
+        if(confirm("정말 종료하시겠습니까?")) {
+            screenMove("initScreen");
+
+            cancelAnimationFrame(animationId);
+            isRunning = false;
+            context.clearRect(0, 0, canvasWidth, canvasHeight);
+        }
+    });
+}

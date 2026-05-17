@@ -5,6 +5,7 @@
 	<title>벽돌깨기</title>
 	<link type="text/css" rel="stylesheet" href="style.css">
 	<script src="main.js"></script>
+	<script src="gameConfig.js"></script>
 	<script src="game.js"></script>
 </head>
 <body>
@@ -27,12 +28,13 @@
 			<div class="backBtn subBtn1">뒤로가기</div>
 		</div>
 		<div id="gameScreen">
+
+			<p id="life" class="text2">보스 체력 : 100 / 100</p>
+			<canvas id="canvas" width="1000" height="800"></canvas>
 			<p id="life" class="text2">내 체력 : 100 / 100</p>
 			<p id="count" class="text2">남은 부메랑 : 5</p>
-
-			<canvas id="canvas" width="1000" height="800"></canvas>
 			<div id="controlButton" class="subBtn1">start</div>
-			<div class="backBtn subBtn1">뒤로가기</div>
+			<div class="backBtn subBtn1">종료하기</div>
 		</div>
 		<div id="settingScreen">
 			<div class="backBtn subBtn1">뒤로가기</div>

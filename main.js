@@ -61,10 +61,7 @@ const startGameSreenSetting = () => {
 		screenMove("initScreen");
 	});
 
-	const gameButton = startGameScreen.querySelector("#gameButton");
-	gameButton.addEventListener("click", () => {
-		screenMove("gameScreen");
-	});
+	//게임시작 버튼 처리는 game.js에서
 
 	const levelButtons = startGameScreen.querySelectorAll("#selectLevel > div");
 	levelButtons.forEach((levelButton, idx) => {
@@ -90,10 +87,7 @@ const startGameSreenSetting = () => {
 const gameScreenSetting = () => {
 	const gameScreen = document.querySelector("#gameScreen");
 
-	const backButton = gameScreen.querySelector(".backBtn");
-	backButton.addEventListener("click", () => {
-		screenMove("initScreen");
-	});
+	//종료하기 버튼은 game.js에서 관리
 
 };
 
