@@ -61,6 +61,11 @@ const startGameSreenSetting = () => {
 		screenMove("initScreen");
 	});
 
+	const mainButton = startGameScreen.querySelector(".mainBtn");
+	mainButton.addEventListener("click", () => {
+		screenMove("storyScreen");
+	});
+
 	//게임시작 버튼 처리는 game.js에서
 
 	const levelButtons = startGameScreen.querySelectorAll("#selectLevel > div");
@@ -68,7 +73,7 @@ const startGameSreenSetting = () => {
 		const changeLevel = (newLevel) => {
 			level = newLevel;
 			const img = startGameScreen.querySelector("#levelImg");
-			img.src = `img/boss${level}`;
+			img.src = `img/boss/${level}.png`;
 			img.alt = "보스이미지" + level;
 
 			levelButtons.forEach((btns) => {
@@ -91,6 +96,17 @@ const gameScreenSetting = () => {
 
 };
 
+//캐릭터, 공 설정을 위한 변수
+let characterNum = 1;
+const characterImg = new Image();
+characterImg.src = `img/character/${characterNum}.png`;
+
+let ballNum = 1;
+const ballImg = new Image();
+ballImg.src = `img/ball/${ballNum}.png`;
+
+
+//설정 화면
 const SettingScreenSetting = () => {
 	const settingScreen = document.querySelector("#settingScreen");
 	
@@ -98,4 +114,49 @@ const SettingScreenSetting = () => {
 	backButton.addEventListener("click", () => {
 		screenMove("initScreen");
 	});
+
+	const prevCharButton = settingScreen.querySelector("#prevCharButton");
+	prevCharButton.addEventListener("click", () => {
+		if (characterNum<=1)
+			characterNum = 3;
+		else
+			characterNum--;
+		characterImg.src = `img/character/${characterNum}.png`;
+	});
+	const nextCharButton = settingScreen.querySelector("#nextCharButton");
+	nextCharButton.addEventListener("click", () => {
+		if (characterNum>=3)
+			characterNum = 1;
+		else
+			characterNum++;
+		characterImg.src = `img/character/${characterNum}.png`;
+	});
+
+	const prevBallButton = settingScreen.querySelector("#prevBallButton");
+	prevBallButton.addEventListener("click", () => {
+		if (ballNum<=1)
+			ballNum = 3;
+		else
+			ballNum--;
+		ballImg.src = `img/ball/${ballNum}.png`;
+	});
+	const nextBallButton = settingScreen.querySelector("#nextBallButton");
+	nextBallButton.addEventListener("click", () => {
+		if (ballNum>=3)
+			ballNum = 1;
+		else
+			ballNum++;
+		ballImg.src = `img/ball/${ballNum}.png`;
+	});
+
+	//음악 on/off기능?
+
 };
+
+
+//let skills = {};
+let skills = [ 		//테스트 용
+	"스킬1",
+	"스킬2",
+	"스킬3"
+];

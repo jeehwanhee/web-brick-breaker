@@ -34,7 +34,7 @@ footer {
 }
 
 .text2 {
-	width: 1000px;
+	width: 100%;
 	font-size: 16px;
 	margin: 8px 0;
 }
@@ -75,4 +75,38 @@ footer {
 .selected {
 	color: red;
 	font-size: 24px;
+}
+
+/*보스 상태창*/
+#gameScreen > div:first-child {
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+
+}
+
+#settingScreen {
+	align-items: center;
+}
+
+#settingScreen > div {
+	width: 800px;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-evenly;
+}
+
+#userInterface {
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+}
+
+#userInterface > div:last-child {
+	display: flex;
+	flex-direction: row;
+	width: 40%;
+	justify-content: space-between;
 }
