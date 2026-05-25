@@ -196,6 +196,9 @@ const initScreen = () => {
     const levelText = document.querySelector("#level");
     levelText.innerText = `스테이지 ${level}`;
 
+    
+    controlButton.style.display = "block";
+
     updateUi();
 };
 
@@ -257,9 +260,18 @@ const updateUi = () => {
 
     if (life <= 0 || count <= 0) {
         //패배
-        alert("패배");
-        isRunning = false;
         cancelAnimationFrame(animationId);
+        isRunning = false;
+        context.clearRect(0, 0, canvasWidth, canvasHeight);
+        context.beginPath();
+        context.fillStyle = 'black';
+        context.font = '48px Arial';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText("패배했습니다..", canvasWidth/2, canvasHeight/2);
+        context.closePath();
+
+        controlButton.style.display = "none";
     }
 };
 
