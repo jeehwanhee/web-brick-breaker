@@ -38,20 +38,44 @@ const skillKeys = ["Q", "W", "E"];
 
 window.addEventListener("load", () => {
     const gameButton = document.querySelector("#gameButton");
+    const boostContainer = document.querySelector("#boosts");
+
     gameButton.addEventListener("click", () => {
-        
+        showSkills = [];
+        boostContainer.innerHTML = "";
+
+        while (showSkills.length < 3) {
+            const skill = skillList[Math.floor(Math.random()*skillList.length)];
+            if (showSkills.includes(skill)) continue;
+            if (skills.includes(skill)) continue;
+            showSkills.push(skill);
+        }
+
+        for (let i=0; i<3; i++) {
+            const container = document.createElement("div");
+            container.classList.add("boost");
+            container.innerText = `스킬 ${i+1}`
+            const sName = document.createElement("div");
+            sName.classList.add("text1");
+            sName.innerText = showSkills[i];
+            const sDescription = document.createElement("div");
+            sDescription.classList.add("text2");
+            sDescription.innerText = skillDescription[showSkills[i]];
+
+            container.append(sName);
+            container.append(sDescription);
+            boostContainer.append(container);
+
+            container.addEventListener("click", () => {
+                skills.push(showSkills[i]);
+                initScreen();
+                initAnimation();
+                screenMove("gameScreen");
+            })
+        }
         screenMove("boostScreen");
     });
 
-    const startButton = document.querySelectorAll(".startBtn");
-    //게임 시작 버튼을 누르면 실행
-    startButton.forEach((button) => 
-        button.addEventListener("click", () => {
-            initScreen();
-            initAnimation();
-            screenMove("gameScreen");
-        })
-    );
 
     screenBack();
 	
@@ -133,6 +157,7 @@ const initScreen = () => {
 
     //스킬 세팅
     const skillsContainer = document.querySelector("#skills");
+    skillsContainer.innerHTML = "";
     skills.forEach((skill, idx) => {
         const element = document.createElement("div");
         element.setAttribute("id",`skill${idx+1}`);
