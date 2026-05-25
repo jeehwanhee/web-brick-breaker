@@ -38,12 +38,20 @@ const skillKeys = ["Q", "W", "E"];
 
 window.addEventListener("load", () => {
     const gameButton = document.querySelector("#gameButton");
-    //게임 시작 버튼을 누르면 실행
     gameButton.addEventListener("click", () => {
-        initScreen();
-        initAnimation();
-        screenMove("gameScreen");
+        
+        screenMove("boostScreen");
     });
+
+    const startButton = document.querySelectorAll(".startBtn");
+    //게임 시작 버튼을 누르면 실행
+    startButton.forEach((button) => 
+        button.addEventListener("click", () => {
+            initScreen();
+            initAnimation();
+            screenMove("gameScreen");
+        })
+    );
 
     screenBack();
 	
