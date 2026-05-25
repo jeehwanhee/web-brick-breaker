@@ -1,11 +1,11 @@
 /*main.js, gameConfig.js의 전역변수
 let level = 1;
 let bricks = [];
-let totalLife;
-let totBossLife;
-let count;
-let power;
 let skills = [];
+let totLife;        // 내 체력
+let count;          // 부메랑 개수
+let power;          // 공격력
+let totBossLife;    // 보스 체력
 
 const characterNum = 1;
 const characterImg = new Image();
@@ -34,46 +34,14 @@ let animationId;
 let life;
 let bossLife;
 
+let winning = false;
+
 const skillKeys = ["Q", "W", "E"];
 
 window.addEventListener("load", () => {
     const gameButton = document.querySelector("#gameButton");
-    const boostContainer = document.querySelector("#boosts");
-
     gameButton.addEventListener("click", () => {
-        showSkills = [];
-        boostContainer.innerHTML = "";
-
-        while (showSkills.length < 3) {
-            const skill = skillList[Math.floor(Math.random()*skillList.length)];
-            if (showSkills.includes(skill)) continue;
-            if (skills.includes(skill)) continue;
-            showSkills.push(skill);
-        }
-
-        for (let i=0; i<3; i++) {
-            const container = document.createElement("div");
-            container.classList.add("boost");
-            container.innerText = `스킬 ${i+1}`
-            const sName = document.createElement("div");
-            sName.classList.add("text1");
-            sName.innerText = showSkills[i];
-            const sDescription = document.createElement("div");
-            sDescription.classList.add("text2");
-            sDescription.innerText = skillDescription[showSkills[i]];
-
-            container.append(sName);
-            container.append(sDescription);
-            boostContainer.append(container);
-
-            container.addEventListener("click", () => {
-                skills.push(showSkills[i]);
-                initScreen();
-                initAnimation();
-                screenMove("gameScreen");
-            })
-        }
-        screenMove("boostScreen");
+        initBoostScreen();
     });
 
 
@@ -103,7 +71,15 @@ window.addEventListener("load", () => {
     const controlButton = document.querySelector("#controlButton");
 
     controlButton.addEventListener("click", () => {
-    	if (isRunning) {
+        if (winning) {
+            controlButton.innerText = "pause";
+            winning = false;
+
+            level++;
+            screenMove("storyScreen");
+
+        }
+    	else if (isRunning) {
     		controlButton.innerText = "resume";
     		isRunning = false;
     	}
@@ -131,6 +107,44 @@ window.addEventListener("load", () => {
     });
 
 });
+
+const initBoostScreen = () => {
+    const boostContainer = document.querySelector("#boosts");
+
+    showSkills = [];
+    boostContainer.innerHTML = "";
+
+    while (showSkills.length < 3) {
+        const skill = skillList[Math.floor(Math.random()*skillList.length)];
+        if (showSkills.includes(skill)) continue;
+        if (skills.includes(skill)) continue;
+        showSkills.push(skill);
+    }
+
+    for (let i=0; i<3; i++) {
+        const container = document.createElement("div");
+        container.classList.add("boost");
+        container.innerText = `스킬 ${i+1}`
+        const sName = document.createElement("div");
+        sName.classList.add("text1");
+        sName.innerText = showSkills[i];
+        const sDescription = document.createElement("div");
+        sDescription.classList.add("text2");
+        sDescription.innerText = skillDescription[showSkills[i]];
+
+        container.append(sName);
+        container.append(sDescription);
+        boostContainer.append(container);
+
+        container.addEventListener("click", () => {
+            skills.push(showSkills[i]);
+            initScreen();
+            initAnimation();
+            screenMove("gameScreen");
+        })
+    }
+    screenMove("boostScreen");
+}
 
 const initScreen = () => {
     //난이도 선택으로 결정되는 전역변수 등등
@@ -179,6 +193,9 @@ const initScreen = () => {
     });
 
 
+    const levelText = document.querySelector("#level");
+    levelText.innerText = `스테이지 ${level}`;
+
     updateUi();
 };
 
@@ -199,7 +216,6 @@ const animate = () => {
 	if (!isRunning) {
 		return;
 	}
-    updateUi();
 
     context.clearRect(0, 0, canvasWidth, canvasHeight);
     ball.update();
@@ -208,6 +224,7 @@ const animate = () => {
         brick.draw();
     });
     animationId = requestAnimationFrame(animate);
+    updateUi();
 };
 
 const startGame = () => {
@@ -226,9 +243,16 @@ const updateUi = () => {
 
     if (bossLife <= 0) {
         //승리
-        alert("승리");
-        isRunning = false;
+        winning = true;
         cancelAnimationFrame(animationId);
+        isRunning = false;
+        context.clearRect(0, 0, canvasWidth, canvasHeight);
+
+        bossDie();
+        const controlButton = document.querySelector("#controlButton");
+        controlButton.innerText = "다음 스테이지 이동";
+
+        //캔버스 흐리게 하는 함수 호출
     }
 
     if (life <= 0 || count <= 0) {

@@ -42,8 +42,20 @@ const initScreenSetting = () => {
 
 	const startGameButton = initScreen.querySelector("#startGameButton");
 	startGameButton.addEventListener("click", () => {
-		screenMove("startGameScreen");
 		level = 1;
+		const levelButtons = startGameScreen.querySelectorAll("#selectLevel > div");
+		
+		const img = startGameScreen.querySelector("#levelImg");
+		img.src = `img/boss/${level}.png`;
+		img.alt = "보스이미지" + level;
+
+		levelButtons.forEach((btns) => {
+			btns.classList.remove("selected");
+		});
+		levelButtons[0].classList.add("selected");
+
+
+		screenMove("startGameScreen");
 	});
 
 	const settingButton = initScreen.querySelector("#settingButton");
@@ -72,6 +84,7 @@ const startGameSreenSetting = () => {
 	levelButtons.forEach((levelButton, idx) => {
 		const changeLevel = (newLevel) => {
 			level = newLevel;
+			console.log(level);
 			const img = startGameScreen.querySelector("#levelImg");
 			img.src = `img/boss/${level}.png`;
 			img.alt = "보스이미지" + level;
