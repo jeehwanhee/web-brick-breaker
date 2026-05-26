@@ -190,7 +190,7 @@ const level1Setting = () => {
     totLife = 100;
     count = 5;
     power = 20;
-    totBossLife = 500;
+    totBossLife = 100;
 }
 
 let bricks = [];
@@ -222,6 +222,7 @@ const bossImgUpdate = (state) => {
         break;
     }
 }
+
 
 const bossPatternConfigs = {
     // 1스테이지: 나방
@@ -330,3 +331,8 @@ const bossPatternConfigs = {
         }
     ]
 };
+
+const bossDie = () => {
+    //말풍선? 이미지 변환
+}
+

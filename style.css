@@ -78,7 +78,7 @@ footer {
 }
 
 /*보스 상태창*/
-#gameScreen > div:first-child {
+#gameScreen > div:nth-of-type(1) {
 	width: 100%;
 	display: flex;
 	flex-direction: row;
@@ -104,9 +104,22 @@ footer {
 	justify-content: space-between;
 }
 
-#userInterface > div:last-child {
+#skills {
 	display: flex;
 	flex-direction: row;
 	width: 40%;
-	justify-content: space-between;
+	justify-content: flex-start;
+}
+
+#boosts {
+	display: flex;
+}
+
+.boost {
+	width: 210px;
+	font-size: 24px;
+	text-align: center;
+	margin: 36px;
+	padding: 24px;
+	border: 1px solid black;
 }

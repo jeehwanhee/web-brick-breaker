@@ -42,8 +42,20 @@ const initScreenSetting = () => {
 
 	const startGameButton = initScreen.querySelector("#startGameButton");
 	startGameButton.addEventListener("click", () => {
-		screenMove("startGameScreen");
 		level = 1;
+		const levelButtons = startGameScreen.querySelectorAll("#selectLevel > div");
+		
+		const img = startGameScreen.querySelector("#levelImg");
+		img.src = `img/boss/${level}.png`;
+		img.alt = "보스이미지" + level;
+
+		levelButtons.forEach((btns) => {
+			btns.classList.remove("selected");
+		});
+		levelButtons[0].classList.add("selected");
+
+
+		screenMove("startGameScreen");
 	});
 
 	const settingButton = initScreen.querySelector("#settingButton");
@@ -72,6 +84,7 @@ const startGameSreenSetting = () => {
 	levelButtons.forEach((levelButton, idx) => {
 		const changeLevel = (newLevel) => {
 			level = newLevel;
+			console.log(level);
 			const img = startGameScreen.querySelector("#levelImg");
 			img.src = `img/boss/${level}.png`;
 			img.alt = "보스이미지" + level;
@@ -153,6 +166,7 @@ const SettingScreenSetting = () => {
 
 };
 
+<<<<<<< HEAD
  
 //let skills = {};
 let skills = [ 		//테스트 용
@@ -160,3 +174,30 @@ let skills = [ 		//테스트 용
 	"스킬2",
 	"스킬3"
 ];
+const skillList = [
+    "베리어 생성",
+    "산탄공",
+    "시간 느려지기",
+    "유체화",
+    "관통 공",
+    "연쇄 번개",
+    "타오르는 공",
+    "튕겨 내기"
+];
+
+const skillDescription = {
+    "베리어 생성": "1초 동안 아래에 베리어를 생성하여 공이 나가는 것을 막습니다.",
+    "산탄공": "스킬 사용 후, 처음 공이 바에 튕길 시 공 5개가 추가됩니다.",
+    "시간 느려지기": "3초 동안 모든 투사체의 속도가 느려집니다.",
+    "유체화": "3초 동안 바의 이동속도가 증가합니다.",
+    "관통 공": "스킬 사용 후, 처음 공이 바에 튕길 시 블록과 바를 관통하는 공 2개를 발사합니다.",
+    "연쇄 번개": "스킬 사용 후, 처음 공이 블럭을 타격할 때 주변 블록을 공격하는 번개가 내립니다.",
+    "타오르는 공": "스킬 사용 후, 처음 공이 블럭을 타격할 때 일정시간 동안 지속 데미지를 입힙니다.",
+    "튕겨 내기": "1초 동안 방어막을 생성하여 보스의 공격을 튕겨내어 반격합니다."
+};
+
+// 스킬 선택지 3개
+let showSkills = [];
+
+// 사용자가 가지고 있는 스킬들
+let skills = [];
