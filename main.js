@@ -161,19 +161,10 @@ const SettingScreenSetting = () => {
 			ballNum++;
 		ballImg.src = `img/ball/${ballNum}.png`;
 	});
-
-	//음악 on/off기능?
-
 };
-
-<<<<<<< HEAD
  
 //let skills = {};
-let skills = [ 		//테스트 용
-	"스킬1",
-	"스킬2",
-	"스킬3"
-];
+
 const skillList = [
     "베리어 생성",
     "산탄공",

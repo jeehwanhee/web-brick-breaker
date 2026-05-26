@@ -255,7 +255,6 @@ const animate = () => {
     animationId = requestAnimationFrame(animate);
     updateUi();
 };
-
 const startBossPattern = () => {
     if (bossSkillTimer !== null) return;
     if (isBossAttacking) return;
