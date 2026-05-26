@@ -153,7 +153,7 @@ const SettingScreenSetting = () => {
 
 };
 
-
+ 
 //let skills = {};
 let skills = [ 		//테스트 용
 	"스킬1",

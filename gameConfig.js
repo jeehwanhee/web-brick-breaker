@@ -1,5 +1,6 @@
 
 
+
 class Ball {
     constructor(x, y, dx, dy, color)
     {
@@ -221,3 +222,111 @@ const bossImgUpdate = (state) => {
         break;
     }
 }
+
+const bossPatternConfigs = {
+    // 1스테이지: 나방
+    1: [
+        {
+            id: "moth_powder",
+            name: "가루 뿌리기",
+            type: "powder",
+            imageSrc: "img/bossSkill/moth_powder.png",
+            count: 8,
+            radius: 14,
+            speed:  4,
+            damage: 5
+        },
+        {
+            id: "moth_wind",
+            name: "대각선 바람",
+            type: "diagonalWind",
+            imageSrc: "img/bossSkill/moth_wind.png",
+            width: 160,
+            height: 240,
+            speed: 7,
+            damage: 12
+        },
+        {
+            id: "moth_charge",
+            name: "돌진기",
+            type: "charge",
+            imageSrc: "img/bossSkill/moth_charge.png",
+            width: 280,
+            height: 200,
+            speed: 12,
+            damage: 15
+        }
+    ],
+
+    // 2스테이지: 아그님
+    2: [
+        {
+            id: "agahnim_lightning",
+            name: "연속 번개",
+            type: "lightningRain",
+            duration: 3500,
+            count: 6,
+            interval: 450,
+            width: 70,
+            damage: 10
+        },
+        {
+            id: "agahnim_diagonal_lightning",
+            name: "양 대각선 번개",
+            type: "doubleDiagonal",
+            duration: 3000,
+            width: 120,
+            height: 300,
+            speed: 8,
+            damage: 15
+        },
+        {
+            id: "agahnim_bat_missile",
+            name: "박쥐 유도 미사일",
+            type: "homingBat",
+            duration: 4500,
+            count: 2,
+            radius: 18,
+            speed: 4,
+            damage: 12
+        }
+    ],
+
+    // 3스테이지: 가논
+    3: [
+        {
+            id: "ganon_shockwave",
+            name: "점프 충격파",
+            type: "shockwave",
+            duration: 3500,
+            count: 3,
+            interval: 600,
+            width: 45,
+            height: 100,
+            speed: 8,
+            damage: 13
+        },
+        {
+            id: "ganon_fire",
+            name: "자리 불 장판",
+            type: "fireZone",
+            duration: 3500,
+            warningTime: 500,
+            activeTime: 1200,
+            width: 120,
+            height: 120,
+            damage: 5
+        },
+        {
+            id: "ganon_trident",
+            name: "삼지창 집중 공격",
+            type: "tridentConverge",
+            duration: 3500,
+            count: 6,
+            width: 25,
+            height: 90,
+            speed: 8,
+            damage: 16
+        }
+    ]
+};
