@@ -173,11 +173,11 @@ const initScreen = () => {
         break;
     case 2:
         level1Setting();
-        level1Bricks();
+        level2Bricks();
         break;
     case 3:
         level1Setting();
-        level1Bricks();
+        level3Bricks();
         break;
     }
     bossImgUpdate("init");
