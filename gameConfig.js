@@ -265,71 +265,90 @@ const bossPatternConfigs = {
             id: "agahnim_lightning",
             name: "연속 번개",
             type: "lightningRain",
-            duration: 3500,
+            imageSrc: "img/bossSkill/agahnim_lightning.png",
             count: 6,
-            interval: 450,
-            width: 70,
+            interval: 500,
+            width: 80,
+            height: 180,
+            speed: 12,
             damage: 10
         },
         {
-            id: "agahnim_diagonal_lightning",
-            name: "양 대각선 번개",
-            type: "doubleDiagonal",
-            duration: 3000,
-            width: 120,
-            height: 300,
-            speed: 8,
+            id: "agahnim_double_fireball",
+            name: "양 대각선 파이어볼",
+            type: "doubleFireball",
+            imageSrc: "img/bossSkill/agahnim_fireball.png",
+            radius: 55,
+            speed: 7,
             damage: 15
         },
         {
             id: "agahnim_bat_missile",
             name: "박쥐 유도 미사일",
             type: "homingBat",
-            duration: 4500,
+            imageSrc: "img/bossSkill/agahnim_bat.png",
             count: 2,
-            radius: 18,
-            speed: 4,
+            radius: 24,
+
+            xSpeed: 3,
+            ySpeed: 5,
+
             damage: 12
         }
     ],
 
     // 3스테이지: 가논
-    3: [
-        {
-            id: "ganon_shockwave",
-            name: "점프 충격파",
-            type: "shockwave",
-            duration: 3500,
-            count: 3,
-            interval: 600,
-            width: 45,
-            height: 100,
-            speed: 8,
-            damage: 13
-        },
-        {
-            id: "ganon_fire",
-            name: "자리 불 장판",
-            type: "fireZone",
-            duration: 3500,
-            warningTime: 500,
-            activeTime: 1200,
-            width: 120,
-            height: 120,
-            damage: 5
-        },
-        {
-            id: "ganon_trident",
-            name: "삼지창 집중 공격",
-            type: "tridentConverge",
-            duration: 3500,
-            count: 6,
-            width: 25,
-            height: 90,
-            speed: 8,
-            damage: 16
-        }
-    ]
+    // 3스테이지: 가논
+    // 3스테이지: 가논
+3: [
+    {
+        id: "ganon_shockwave",
+        name: "점프 충격파",
+        type: "shockwave",
+        imageSrc: "img/bossSkill/ganon_shockwave.png",
+
+        // 나방 먼지보다 적고, 넓게 퍼지게
+        count: 5,
+        radius: 24,
+        speed: 5,
+
+        // 보스 체력 50% 이상 / 미만 데미지
+        damage: 12,
+        enragedDamage: 20
+    },
+    {
+        id: "ganon_fire",
+        name: "자리 불 장판",
+        type: "fireZone",
+        imageSrc: "img/bossSkill/ganon_fire.png",
+
+        warningTime: 500,      // 0.5초 경고
+        activeTime: 1200,      // 불 지속 시간
+        damageInterval: 300,   // 0.3초마다 독뎀 느낌
+
+        width: 120,
+        height: 120,
+
+        damage: 4,
+        enragedDamage: 7
+    },
+    {
+        id: "ganon_trident",
+        name: "삼지창 집중 공격",
+        type: "tridentConverge",
+
+        imageSrcLeft: "img/bossSkill/ganon_trident_left.png",
+        imageSrcCenter: "img/bossSkill/ganon_trident_center.png",
+        imageSrcRight: "img/bossSkill/ganon_trident_right.png",
+
+        width: 45,
+        height: 100,
+        speed: 7,
+
+        damage: 16,
+        enragedDamage: 25
+    }
+]
 };
 
 const bossDie = () => {

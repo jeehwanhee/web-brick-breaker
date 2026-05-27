@@ -40,7 +40,7 @@ let winning = false;
 const skillKeys = ["Q", "W", "E"];
 
 let bossSkillTimer = null;
-const BOSS_ATTACK_DELAY = 15000;
+const BOSS_ATTACK_DELAY = 5000;
 
 let isBossAttacking = false;
 let currentBossPattern = null;
@@ -314,6 +314,30 @@ const createBossPattern = (pattern) => {
         case "charge":
             createCharge(pattern);
             break;
+
+        case "lightningRain":
+            createLightningRain(pattern);
+            break;
+
+        case "doubleFireball":
+            createDoubleFireball(pattern);
+            break;
+
+        case "homingBat":
+            createHomingBat(pattern);
+            break;
+
+        case "shockwave":
+            createGanonShockwave(pattern);
+            break;
+
+        case "fireZone":
+            createFireZone(pattern);
+            break;
+
+        case "tridentConverge":
+            createTridentConverge(pattern);
+            break;
     }
 };
 
@@ -372,11 +396,47 @@ const createCharge = (pattern) => {
     });
 };
 
+const createDoubleFireball = (pattern) => {
+    bossProjectiles.push({
+        kind: "circle",
+        x: 180,
+        y: -pattern.radius,
+        dx: pattern.speed,
+        dy: pattern.speed,
+        radius: pattern.radius,
+        damage: pattern.damage,
+        imageSrc: pattern.imageSrc,
+        hit: false
+    });
+
+    bossProjectiles.push({
+        kind: "circle",
+        x: canvasWidth - 180,
+        y: -pattern.radius,
+        dx: -pattern.speed,
+        dy: pattern.speed,
+        radius: pattern.radius,
+        damage: pattern.damage,
+        imageSrc: pattern.imageSrc,
+        hit: false
+    });
+};
+
+const getBossPatternDamage = (pattern) => {
+    const hpRatio = bossLife / totBossLife;
+
+    if (hpRatio >= 0.5) {
+        return pattern.damage;
+    }
+
+    return pattern.enragedDamage;
+};
+
 
 const isProjectileOut = (projectile) => {
     const margin = 300;
 
-    if (projectile.kind === "circle") {
+    if (projectile.kind === "circle" || projectile.kind === "homing") {
         return (
             projectile.x < -margin ||
             projectile.x > canvasWidth + margin ||
@@ -385,7 +445,7 @@ const isProjectileOut = (projectile) => {
         );
     }
 
-    return (
+    return (    
         projectile.x + projectile.width < -margin ||
         projectile.x > canvasWidth + margin ||
         projectile.y + projectile.height < -margin ||
@@ -394,9 +454,29 @@ const isProjectileOut = (projectile) => {
 };
 
 const updateBossProjectiles = () => {
+    const now = Date.now();
+
     bossProjectiles.forEach((projectile) => {
-        projectile.x += projectile.dx;
-        projectile.y += projectile.dy;
+        if (projectile.kind === "fire") {
+            drawFireZone(projectile, now);
+
+            if (isFireActive(projectile, now) && isProjectileHitBar(projectile)) {
+                if (now - projectile.lastDamageTime >= projectile.damageInterval) {
+                    projectile.lastDamageTime = now;
+                    life -= projectile.damage;
+                    updateUi();
+                }
+            }
+
+            return;
+        }
+
+        if (projectile.kind === "homing") {
+            updateHomingProjectile(projectile);
+        } else {
+            projectile.x += projectile.dx;
+            projectile.y += projectile.dy;
+        }
 
         drawBossProjectile(projectile);
 
@@ -407,24 +487,47 @@ const updateBossProjectiles = () => {
         }
     });
 
-    // 화면 밖으로 나간 투사체 제거
     bossProjectiles = bossProjectiles.filter((projectile) => {
+        if (projectile.kind === "fire") {
+            const now = Date.now();
+            return now - projectile.createdAt < projectile.warningTime + projectile.activeTime;
+        }
+
         return !isProjectileOut(projectile);
     });
 };
 
+
+
 const loadBossSkillImages = () => {
     Object.values(bossPatternConfigs).forEach((patterns) => {
         patterns.forEach((pattern) => {
-            if (pattern.imageSrc && !bossSkillImages[pattern.imageSrc]) {
-                const img = new Image();
-                img.src = pattern.imageSrc;
-                bossSkillImages[pattern.imageSrc] = img;
-            }
+            const imageSrcList = [
+                pattern.imageSrc,
+                pattern.imageSrcLeft,
+                pattern.imageSrcCenter,
+                pattern.imageSrcRight
+            ];
+
+            imageSrcList.forEach((imageSrc) => {
+                if (imageSrc && !bossSkillImages[imageSrc]) {
+                    const img = new Image();
+
+                    img.onload = () => {
+                        console.log("이미지 로드 성공:", imageSrc);
+                    };
+
+                    img.onerror = () => {
+                        console.error("이미지 로드 실패:", imageSrc);
+                    };
+
+                    img.src = imageSrc;
+                    bossSkillImages[imageSrc] = img;
+                }
+            });
         });
     });
 };
-
 
 const drawBossProjectile = (projectile) => {
     context.save();
@@ -432,8 +535,8 @@ const drawBossProjectile = (projectile) => {
     if (projectile.imageSrc) {
         const img = bossSkillImages[projectile.imageSrc];
 
-        if (img && img.complete) {
-            if (projectile.kind === "circle") {
+        if (img && img.complete && img.naturalWidth > 0) {
+            if (projectile.kind === "circle" || projectile.kind === "homing") {
                 context.drawImage(
                     img,
                     projectile.x - projectile.radius,
@@ -456,15 +559,237 @@ const drawBossProjectile = (projectile) => {
         }
     }
 
-    // 이미지가 아직 안 불러와졌을 때 임시 빨간색 도형
     context.fillStyle = "red";
 
-    if (projectile.kind === "circle") {
+    if (projectile.kind === "circle" || projectile.kind === "homing") {
         context.beginPath();
         context.arc(projectile.x, projectile.y, projectile.radius, 0, Math.PI * 2);
         context.fill();
         context.closePath();
     } else {
+        context.fillRect(projectile.x, projectile.y, projectile.width, projectile.height);
+    }
+
+    context.restore();
+};
+
+const scheduleBossSpawn = (delay, spawnFunction) => {
+    pendingSpawns++;
+
+    const timer = setTimeout(() => {
+        spawnFunction();
+
+        pendingSpawns--;
+
+        if (pendingSpawns === 0) {
+            spawningFinished = true;
+        }
+    }, delay);
+
+    bossPatternTimeouts.push(timer);
+};
+
+const createLightningRain = (pattern) => {
+    for (let i = 0; i < pattern.count; i++) {
+        scheduleBossSpawn(i * pattern.interval, () => {
+            const x = Math.random() * (canvasWidth - pattern.width);
+
+            bossProjectiles.push({
+                kind: "rect",
+                x: x,
+                y: -pattern.height,
+                dx: 0,
+                dy: pattern.speed,
+                width: pattern.width,
+                height: pattern.height,
+                damage: pattern.damage,
+                imageSrc: pattern.imageSrc,
+                hit: false
+            });
+        });
+    }
+};
+
+const createHomingBat = (pattern) => {
+    for (let i = 0; i < pattern.count; i++) {
+        bossProjectiles.push({
+            kind: "homing",
+            x: canvasWidth * (0.3 + i * 0.4),
+            y: 50,
+            dx: 0,
+            dy: 0,
+
+            xSpeed: pattern.xSpeed,
+            ySpeed: pattern.ySpeed,
+
+            radius: pattern.radius,
+            damage: pattern.damage,
+            imageSrc: pattern.imageSrc,
+            hit: false
+        });
+    }
+};
+
+const updateHomingProjectile = (projectile) => {
+    const targetX = bar.x + bar.width / 2;
+    const diffX = targetX - projectile.x;
+
+    // x축만 바를 따라감
+    if (Math.abs(diffX) <= projectile.xSpeed) {
+        projectile.x = targetX;
+    } else if (diffX > 0) {
+        projectile.x += projectile.xSpeed;
+    } else {
+        projectile.x -= projectile.xSpeed;
+    }
+
+    // y축은 무조건 아래로 내려감
+    projectile.y += projectile.ySpeed;
+};
+
+const createGanonShockwave = (pattern) => {
+    const startX = canvasWidth / 2;
+    const startY = 90;
+    const damage = getBossPatternDamage(pattern);
+
+    for (let i = 0; i < pattern.count; i++) {
+        const ratio = pattern.count === 1 ? 0.5 : i / (pattern.count - 1);
+
+        // 0.08π ~ 0.92π
+        // 넓게 퍼져서 사이에 피할 공간이 생김
+        const angle = Math.PI * (0.08 + 0.84 * ratio);
+
+        bossProjectiles.push({
+            kind: "circle",
+            x: startX,
+            y: startY,
+            dx: Math.cos(angle) * pattern.speed,
+            dy: Math.sin(angle) * pattern.speed,
+            radius: pattern.radius,
+            damage: damage,
+            imageSrc: pattern.imageSrc,
+            hit: false
+        });
+    }
+};
+
+const createFireZone = (pattern) => {
+    const damage = getBossPatternDamage(pattern);
+
+    let fireX = bar.x + bar.width / 2 - pattern.width / 2;
+    let fireY = bar.y + bar.height / 2 - pattern.height / 2;
+
+    // 화면 밖으로 안 나가게 보정
+    fireX = Math.max(0, Math.min(fireX, canvasWidth - pattern.width));
+    fireY = Math.max(0, Math.min(fireY, canvasHeight - pattern.height));
+
+    bossProjectiles.push({
+        kind: "fire",
+        x: fireX,
+        y: fireY,
+        width: pattern.width,
+        height: pattern.height,
+
+        damage: damage,
+        damageInterval: pattern.damageInterval,
+
+        warningTime: pattern.warningTime,
+        activeTime: pattern.activeTime,
+        createdAt: Date.now(),
+        lastDamageTime: 0,
+
+        imageSrc: pattern.imageSrc,
+        hit: false
+    });
+};
+
+const createTridentConverge = (pattern) => {
+    const targetX = bar.x + bar.width / 2;
+    const targetY = bar.y + bar.height / 2;
+    const damage = getBossPatternDamage(pattern);
+
+    const tridents = [
+        {
+            direction: "left",
+            x: 80,
+            y: -pattern.height,
+            imageSrc: pattern.imageSrcLeft
+        },
+        {
+            direction: "center",
+            x: canvasWidth / 2 - pattern.width / 2,
+            y: -pattern.height,
+            imageSrc: pattern.imageSrcCenter
+        },
+        {
+            direction: "right",
+            x: canvasWidth - 80 - pattern.width,
+            y: -pattern.height,
+            imageSrc: pattern.imageSrcRight
+        }
+    ];
+
+    tridents.forEach((trident) => {
+        const startCenterX = trident.x + pattern.width / 2;
+        const startCenterY = trident.y + pattern.height / 2;
+
+        const vx = targetX - startCenterX;
+        const vy = targetY - startCenterY;
+        const length = Math.sqrt(vx * vx + vy * vy);
+
+        bossProjectiles.push({
+            kind: "rect",
+
+            x: trident.x,
+            y: trident.y,
+
+            dx: (vx / length) * pattern.speed,
+            dy: (vy / length) * pattern.speed,
+
+            width: pattern.width,
+            height: pattern.height,
+
+            damage: damage,
+            imageSrc: trident.imageSrc,
+            direction: trident.direction,
+            hit: false
+        });
+    });
+};
+
+const isFireActive = (projectile, now) => {
+    return now - projectile.createdAt >= projectile.warningTime;
+};
+
+const drawFireZone = (projectile, now) => {
+    context.save();
+
+    if (!isFireActive(projectile, now)) {
+        // 불이 붙기 전 경고 표시
+        context.strokeStyle = "rgba(255, 0, 0, 0.9)";
+        context.lineWidth = 4;
+        context.strokeRect(projectile.x, projectile.y, projectile.width, projectile.height);
+
+        context.fillStyle = "rgba(255, 0, 0, 0.2)";
+        context.fillRect(projectile.x, projectile.y, projectile.width, projectile.height);
+
+        context.restore();
+        return;
+    }
+
+    // 불 활성화 상태
+    const img = bossSkillImages[projectile.imageSrc];
+
+    if (img && img.complete && img.naturalWidth > 0) {
+        context.drawImage(
+            img,
+            projectile.x,
+            projectile.y,
+            projectile.width,
+            projectile.height
+        );
+    } else {
+        context.fillStyle = "rgba(255, 80, 0, 0.8)";
         context.fillRect(projectile.x, projectile.y, projectile.width, projectile.height);
     }
 
@@ -477,7 +802,7 @@ const isProjectileHitBar = (projectile) => {
     const barTop = bar.y;
     const barBottom = bar.y + bar.height;
 
-    if (projectile.kind === "circle") {
+   if (projectile.kind === "circle" || projectile.kind === "homing") {
         const closestX = Math.max(barLeft, Math.min(projectile.x, barRight));
         const closestY = Math.max(barTop, Math.min(projectile.y, barBottom));
 
