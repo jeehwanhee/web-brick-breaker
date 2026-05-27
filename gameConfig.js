@@ -175,7 +175,7 @@ let count;          // 부메랑 개수
 let power;          // 공격력
 let totBossLife;    // 보스 체력
 
-const itemList = ["공격력", "체력회복"];
+const itemList = ["공격력", "체력회복"]; //최대 4글자로 맞춰주세요(블록 넘침)
 //아이템 이름별 효과
 const itemAbility = {
     "공격력" : (amount) => {
@@ -187,6 +187,18 @@ const itemAbility = {
 }
 
 const level1Setting = () => {
+    totLife = 100;
+    count = 5;
+    power = 20;
+    totBossLife = 100;
+}
+const level2Setting = () => {
+    totLife = 100;
+    count = 5;
+    power = 20;
+    totBossLife = 100;
+}
+const level3Setting = () => {
     totLife = 100;
     count = 5;
     power = 20;

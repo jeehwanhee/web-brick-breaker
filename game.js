@@ -172,11 +172,11 @@ const initScreen = () => {
         level1Bricks();
         break;
     case 2:
-        level1Setting();
+        level2Setting();
         level2Bricks();
         break;
     case 3:
-        level1Setting();
+        level3Setting();
         level3Bricks();
         break;
     }
@@ -184,6 +184,9 @@ const initScreen = () => {
 
     life = totLife; 
     bossLife = totBossLife;
+    winning = false;
+    const controlButton = document.querySelector("#controlButton");
+    controlButton.innerText = "게임 시작";
 
 
     //스킬 세팅
