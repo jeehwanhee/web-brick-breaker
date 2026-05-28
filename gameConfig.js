@@ -10,6 +10,11 @@ class Ball {
         this.dy = dy;
         this.radius = 10;
         this.color = color;
+        this.hitBricks =[];
+        this.totalhitBricks = 0;
+        this.isPenetrationBall = false;
+        this.isShotball = false;
+        this.isDead = false;
     }
 
     draw() {
@@ -111,9 +116,13 @@ class Brick {
         this.y = y;
         this.width = width;
         this.height = height;
-        this.color = color;
+        this.color = color || "#ffffff";
+        this.normalColor = this.color;
         this.hp = hp;
         this.totalHp = hp;
+
+        this.isBurning = false;
+        this.burnTimer = null;
 
         //아이템이 없으면 "", 있으면 랜덤 아이템 이름
         this.item = "";
@@ -129,7 +138,15 @@ class Brick {
     draw() {
         context.beginPath();
         context.rect(this.x, this.y, this.width, this.height);
-        context.fillStyle = this.color;
+
+        const isBurnBlinkOn = this.isBurning && Math.floor(Date.now() / 150) % 2 === 0;
+
+        if (isBurnBlinkOn) {
+            context.fillStyle = "#ff3333";
+        } else {
+            context.fillStyle = this.normalColor;
+        }
+
         context.fill();
         context.closePath();
 
@@ -152,22 +169,35 @@ class Brick {
 }
 
 //블록에 부딪혔을 때
-const brickHit = (brick) => {
-    brick.update(brick.hp - power);
+const damageBrick = (brick, damage) => {
+    if (!brick) return;
+    if (!bricks.includes(brick)) return;
+
+    brick.update(brick.hp - damage);
 
     if (brick.hp <= 0) {
         bossLife -= brick.totalHp;
         bricks = bricks.filter(b => b.hp > 0);
 
-        //아이템 처리
         if (brick.item != "") {
-            itemAbility[brick.item](10);
+            itemAbility[brick.item](10); 
+            brick.item = "";
         }
+
+        if (brick.burnTimer) {
+            clearInterval(brick.burnTimer);
+            brick.burnTimer = null;
+        }
+
+        brick.isBurning = false;
     }
 
-    //보스 이미지 처리, 맞았을 때 이미지 전환
     bossImgUpdate("attacked");
-}
+};
+
+const brickHit = (brick) => {
+    damageBrick(brick, power);
+};
 
 
 let totLife;        // 내 체력
@@ -465,3 +495,47 @@ const bossDie = () => {
     //말풍선? 이미지 변환
 }
 
+// 스킬 스펙 및 이펙트 정의 데이터베이스
+const skillData = {
+    "베리어 생성": {
+        cooldown: 1500,  
+        duration: 1000,    
+    },
+    "유체화": {
+        cooldown: 20000,    
+        duration: 3000,    
+
+    },
+    "시간감속": {
+        cooldown: 12000,
+        duration: 3000,
+    },
+    "관통 공":{
+        cooldown: 2000,
+        duration: 10000,
+    },
+    "산탄공":{
+        cooldown: 2000,
+        duration: 10000,
+    },
+    "타오르는 공": {
+        cooldown: 8000,
+        duration: 10000,
+    },
+    "연쇄 번개": {
+        cooldown: 8000,
+        duration: 10000,
+    },
+    "튕겨 내기": {
+        cooldown: 10000,
+        duration: 1000,
+    }
+    
+};
+
+// 현재 플레이어가 장착한 스킬들의 실시간 상태 관리
+let skillStates = [
+    { name: "", lastUsed: 0, activeUntil: 0, isActive: false },
+    { name: "", lastUsed: 0, activeUntil: 0, isActive: false },
+    { name: "", lastUsed: 0, activeUntil: 0, isActive: false }
+];
