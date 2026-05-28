@@ -106,7 +106,7 @@ class Bar {
 }
 
 class Brick {
-    constructor(x,y,width=100,height=20, color="#ffffff", hp, itmeChance=0.5) {
+    constructor(x,y,width=100,height=20, color="#ffffff", hp=50, itmeChance=0.5) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -129,7 +129,7 @@ class Brick {
     draw() {
         context.beginPath();
         context.rect(this.x, this.y, this.width, this.height);
-        context.fillStyle = "#0095DD";
+        context.fillStyle = this.color;
         context.fill();
         context.closePath();
 
@@ -175,18 +175,39 @@ let count;          // 부메랑 개수
 let power;          // 공격력
 let totBossLife;    // 보스 체력
 
-const itemList = ["공격력", "체력회복"];
+const itemList = ["공격력", "체력회복", "공추가", "바확장"];
 //아이템 이름별 효과
 const itemAbility = {
     "공격력" : (amount) => {
         power += amount;
     },
+
     "체력회복" : (amount) => {
         life = Math.min(life + amount, totLife);
+    },
+
+    "공추가" : () => {
+        addBall();
+    },
+
+    "바확장" : () => {
+        increaseBarWidth(40);
     }
-}
+};
 
 const level1Setting = () => {
+    totLife = 100;
+    count = 5;
+    power = 20;
+    totBossLife = 500;
+}
+const level2Setting = () => {
+    totLife = 100;
+    count = 5;
+    power = 20;
+    totBossLife = 100;
+}
+const level3Setting = () => {
     totLife = 100;
     count = 5;
     power = 20;
@@ -198,17 +219,103 @@ let bricks = [];
 const level1Bricks = () => {
     bricks = [];
 
-    const x = [10, 300, 700];
-    const y = [20, 20, 20];
-    const w = [100, 100, 200];
-    const h = [20, 20, 50];
-    const color = ["#00ff00", "#00ff00", "#00ff00"];
-    const hp = [100, 100, 100];
+    const x = [
+        10, 130, 250, 370, 610, 730, 850, 970,
+        10, 130, 250, 370, 610, 730, 850, 970,
+        10, 130, 250, 370, 610, 730, 850, 970,
+        10, 130, 250, 370, 610, 730, 850, 970,
+    ];
+    const y = [
+        20, 20, 20, 20, 20, 20, 20, 20,
+        50, 50, 50, 50, 50, 50, 50, 50,
+        80, 80, 80, 80, 80, 80, 80, 80,
+        110, 110, 110, 110, 110, 110, 110, 110,
+    ];
+    const w = [];
+    const h = [];
+    const color = []; //배경 보고 어울리는 색으로 넣기
+    const hp = [
+    ];
     for (let i=0; i<x.length;i++) {
         const brick = new Brick(x[i], y[i], w[i], h[i], color[i], hp[i], 0.5);
         bricks.push(brick);
     }
 }
+
+const level2Bricks = () => {
+    bricks = [];
+
+    const x = [
+        10, 130, 250, 370, 490, 610, 730, 850, 970,
+        10, 130, 250, 370, 610, 730, 850, 970,
+        10, 130, 250, 730, 850, 970,
+        10, 130, 850, 970,
+        10, 970,
+        10, 970
+    ];
+    const y = [
+        20, 20, 20, 20, 20, 20, 20, 20, 20,
+        50, 50, 50, 50, 50, 50, 50, 50,
+        80, 80, 80, 80, 80, 80,
+        110, 110, 110, 110,
+        140, 140,
+        170, 170
+    ];
+    const w = [];
+    const h = [];
+    const color = []; //배경 보고 어울리는 색으로 넣기
+    const hp = [ 
+    ];
+    for (let i=0; i<x.length;i++) {
+        const brick = new Brick(x[i], y[i], w[i], h[i], color[i], hp[i], 0.5);
+        bricks.push(brick);
+    }
+};
+
+const level3Bricks = () => {
+    bricks = [];
+
+    const x = [
+        10, 130,      370,                850, 970,
+                 250,                730,     
+            130,                          850,
+                 250,      490,      730,     
+            130, 250,           610,      850,
+                      425     
+    ];
+    const y = [
+        20, 20, 20, 20, 20,
+        50, 50,
+        80, 80,
+        110, 110, 110,  
+        140, 140, 140, 140,
+        170
+    ];
+    const w = [
+        100, 100, 340, 100, 100,
+        100, 100,
+        100, 100, 
+        100, 100, 100, 
+        100, 220, 220, 100, 
+        220, 
+    ];
+    const h = [170, 20, 80, 20, 170];
+    const color = []; //배경 보고 어울리는 색으로 넣기
+    const hp = [ 
+        200, 50, 200, 50, 200,
+        20, 20, 
+        20, 20, 
+        20, 20, 20, 
+        20, 100, 100, 20, 
+        100, 
+    ];
+    for (let i=0; i<x.length;i++) {
+        const brick = new Brick(x[i], y[i], w[i], h[i], color[i], hp[i], 0.5);
+        bricks.push(brick);
+    }
+};
+
+
 
 const bossImgUpdate = (state) => {
     const bossImg = document.querySelector("#bossImg");

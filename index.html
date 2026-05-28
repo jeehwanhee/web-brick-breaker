@@ -11,13 +11,17 @@
 <body>
 	<section>
 		<div id="initScreen">
-			<p class="title">벽돌깨기</p>
-			<div id="startGameButton" class="mainBtn">게임 시작</div>
-			<div id="settingButton" class="mainBtn">환경 설정</div>
+			<div>
+				<p class="title">벽돌깨기</p>
+				<div id="startGameButton" class="mainBtn">게임 시작</div>
+				<div id="settingButton" class="mainBtn">환경 설정</div>
+			</div>
 		</div>
 		<div id="startGameScreen">
 			<p class="text1">스테이지 설정</p>
+
 			<img id="levelImg" src="img/boss/1.png" alt="보스이미지"width="200" height="200">
+
 			<div id="selectLevel">
 				<div class="subBtn1 selected">1단계</div>
 				<div class="subBtn1">2단계</div>
@@ -46,34 +50,32 @@
 			</div>
 
 			<canvas id="canvas" width="1080" height="700"></canvas>
+
 			<div id="userInterface">
 				<div>
 					<p id="life" class="text2">내 체력</p>
 					<p id="count" class="text2">남은 부메랑</p>
 				</div>
-				<div id="skills">
-				</div>
+				<div id="skills"></div>
 			</div>
+
 			<div id="controlButton" class="subBtn1">start</div>
 			<div class="backBtn subBtn1">종료하기</div>
 		</div>
 		<div id="settingScreen">
 			<div>
 				<div id="prevCharButton" class="subBtn1"><</div>
-				<img id="characterImg" src="#" alt="캐릭터이미지">
+				<img id="characterImg" src="img/character/1.png" alt="캐릭터이미지">
 				<div id="nextCharButton" class="subBtn1">></div>
 			</div>
 			<div>
 				<div id="prevBallButton" class="subBtn1"><</div>
-				<img id="ballImg" src="#" alt="공이미지">
+				<img id="ballImg" src="img/ball/1.png" alt="공이미지">
 				<div id="nextBallButton" class="subBtn1">></div>
 			</div>
 
 			<div class="backBtn subBtn1">뒤로가기</div>
 		</div>
 	</section>
-	<footer>
-		2026 1학기 웹프 팀프로젝트 
-	</footer>
 </body>
 </html>

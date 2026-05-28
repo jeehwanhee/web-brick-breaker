@@ -43,6 +43,7 @@ const initScreenSetting = () => {
 	const startGameButton = initScreen.querySelector("#startGameButton");
 	startGameButton.addEventListener("click", () => {
 		level = 1;
+		skills = [];
 		const levelButtons = startGameScreen.querySelectorAll("#selectLevel > div");
 		
 		const img = startGameScreen.querySelector("#levelImg");

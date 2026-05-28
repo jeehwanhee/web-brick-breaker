@@ -20,7 +20,8 @@ ballImg.src = `img/ball/${ballNum}.png`;
 let rightPressed = false;
 let leftPressed = false;
 
-let ball = null;
+let ball = null;   // 기존 코드 호환용: 첫 번째 공
+let balls = [];    // 실제 게임에서 움직이는 공들
 let bar = null;
 
 let canvas = null;
@@ -185,18 +186,21 @@ const initScreen = () => {
         level1Bricks();
         break;
     case 2:
-        level1Setting();
-        level1Bricks();
+        level2Setting();
+        level2Bricks();
         break;
     case 3:
-        level1Setting();
-        level1Bricks();
+        level3Setting();
+        level3Bricks();
         break;
     }
     bossImgUpdate("init");
 
     life = totLife; 
     bossLife = totBossLife;
+    winning = false;
+    const controlButton = document.querySelector("#controlButton");
+    controlButton.innerText = "게임 시작";
 
 
     //스킬 세팅
@@ -234,14 +238,87 @@ const initScreen = () => {
 
 //캔버스 관련 초기 설정 (bricks는 initScreen() -> levelNBricks()에서 초기화)
 const initAnimation = () => {
-    const x = canvasWidth / 2;
-    const y = canvasHeight - 200;
-    const dx = 6;
-    const dy = -6;
-    const color = "#FF0000";
-    ball = new Ball(x,y,dx,dy,color);
-
+    resetBalls();
     bar = new Bar();
+};
+
+const getCharacterHitBox = () => {
+    return {
+        x: bar.x + (bar.width - 100) / 2,
+        y: bar.y + 10,
+        width: 100,
+        height: 150
+    };
+};  
+
+const createNewBall = (
+    x = canvasWidth / 2,
+    y = canvasHeight - 200,
+    dx = 6,
+    dy = -6,
+    color = "#FF0000"
+) => {
+    return new Ball(x, y, dx, dy, color);
+};
+
+const resetBalls = () => {
+    ball = createNewBall();
+    balls = [ball];
+};
+
+const addBall = () => {
+    const baseBall = balls.length > 0 ? balls[0] : createNewBall();
+
+    const newBall = createNewBall(
+        baseBall.x,
+        baseBall.y,
+        baseBall.dx > 0 ? -6 : 6,
+        -Math.abs(baseBall.dy || 6),
+        "#FF0000"
+    );
+
+    balls.push(newBall);
+};
+
+const updateBalls = () => {
+    balls.forEach((b) => {
+        b.update();
+    });
+
+    balls = balls.filter((b) => !b.isDead);
+    ball = balls[0] || null;
+
+    // 모든 공이 떨어졌을 때만 부메랑 개수 감소
+    if (balls.length === 0) {
+        count -= 1;
+        updateUi();
+
+        if (count > 0) {
+            resetBalls();
+        }
+    }
+};
+
+const drawBalls = () => {
+    balls.forEach((b) => {
+        b.draw();
+    });
+};
+
+const increaseBarWidth = (amount = 40) => {
+    const centerX = bar.x + bar.width / 2;
+
+    bar.width = Math.min(bar.width + amount, 280);
+
+    bar.x = centerX - bar.width / 2;
+
+    if (bar.x < 0) {
+        bar.x = 0;
+    }
+
+    if (bar.x + bar.width > canvasWidth) {
+        bar.x = canvasWidth - bar.width;
+    }
 };
 
 //프레임마다 움직일 애니메이션, updateUi호출, 공, 바, 블록 갱신
@@ -279,9 +356,9 @@ const animate = () => {
 
 const drawNormalGame = (moveBall, showBar = true) => {
     if (moveBall) {
-        ball.update();
+        updateBalls();
     } else {
-        ball.draw();
+        drawBalls();
     }
 
     if (showBar) {
@@ -897,14 +974,16 @@ const drawFireZone = (projectile, now) => {
 };
 
 const isProjectileHitBar = (projectile) => {
-    const barLeft = bar.x;
-    const barRight = bar.x + bar.width;
-    const barTop = bar.y;
-    const barBottom = bar.y + bar.height;
+    const character = getCharacterHitBox();
+
+    const targetLeft = character.x;
+    const targetRight = character.x + character.width;
+    const targetTop = character.y;
+    const targetBottom = character.y + character.height;
 
     if (projectile.kind === "circle" || projectile.kind === "homing") {
-        const closestX = Math.max(barLeft, Math.min(projectile.x, barRight));
-        const closestY = Math.max(barTop, Math.min(projectile.y, barBottom));
+        const closestX = Math.max(targetLeft, Math.min(projectile.x, targetRight));
+        const closestY = Math.max(targetTop, Math.min(projectile.y, targetBottom));
 
         const distanceX = projectile.x - closestX;
         const distanceY = projectile.y - closestY;
@@ -918,13 +997,12 @@ const isProjectileHitBar = (projectile) => {
     const projectileBottom = projectile.y + projectile.height;
 
     return (
-        barRight > projectileLeft &&
-        barLeft < projectileRight &&
-        barBottom > projectileTop &&
-        barTop < projectileBottom
-        );
-};
-
+        targetRight > projectileLeft &&
+        targetLeft < projectileRight &&
+        targetBottom > projectileTop &&
+        targetTop < projectileBottom
+    );
+};  
 const checkBossAttackEnd = () => {
     if (!isBossAttacking) return;
 
