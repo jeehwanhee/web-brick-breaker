@@ -300,54 +300,57 @@ const bossPatternConfigs = {
     // 3스테이지: 가논
     // 3스테이지: 가논
     // 3스테이지: 가논
-3: [
-    {
-        id: "ganon_shockwave",
-        name: "점프 충격파",
-        type: "shockwave",
-        imageSrc: "img/bossSkill/ganon_shockwave.png",
+    3: [
+        {
+            id: "ganon_shockwave",
+            name: "점프 충격파",
+            type: "shockwave",
+            imageSrc: "img/bossSkill/ganon_shockwave.png",
 
         // 나방 먼지보다 적고, 넓게 퍼지게
-        count: 5,
-        radius: 24,
-        speed: 5,
+            count: 5,
+            radius: 24,
+            speed: 5,
 
         // 보스 체력 50% 이상 / 미만 데미지
-        damage: 12,
-        enragedDamage: 20
-    },
-    {
-        id: "ganon_fire",
-        name: "자리 불 장판",
-        type: "fireZone",
-        imageSrc: "img/bossSkill/ganon_fire.png",
+            damage: 12,
+            enragedDamage: 20
+        },
+        {
+            id: "ganon_fire",
+            name: "파이어볼 장판",
+            type: "fireZone",
+            imageSrc: "img/bossSkill/ganon_fire.png",
 
-        warningTime: 500,      // 0.5초 경고
-        activeTime: 1200,      // 불 지속 시간
-        damageInterval: 300,   // 0.3초마다 독뎀 느낌
+    count: 3,              // 여러 개 생성
+    gap: 300,              // 파이어볼 사이 간격
 
-        width: 120,
-        height: 120,
+    warningTime: 2000,     // 2초 경고
+    activeTime: 1200,
+    damageInterval: 300,
 
-        damage: 4,
-        enragedDamage: 7
-    },
-    {
-        id: "ganon_trident",
-        name: "삼지창 집중 공격",
-        type: "tridentConverge",
+    width: 120,
+    height: 120,
 
-        imageSrcLeft: "img/bossSkill/ganon_trident_left.png",
-        imageSrcCenter: "img/bossSkill/ganon_trident_center.png",
-        imageSrcRight: "img/bossSkill/ganon_trident_right.png",
+    damage: 4,
+    enragedDamage: 7
+},
+{
+    id: "ganon_trident",
+    name: "삼지창 집중 공격",
+    type: "tridentConverge",
 
-        width: 45,
-        height: 100,
-        speed: 7,
+    imageSrcLeft: "img/bossSkill/ganon_trident_left.png",
+    imageSrcCenter: "img/bossSkill/ganon_trident_center.png",
+    imageSrcRight: "img/bossSkill/ganon_trident_right.png",
 
-        damage: 16,
-        enragedDamage: 25
-    }
+    width: 45,
+    height: 100,
+    speed: 7,
+
+    damage: 16,
+    enragedDamage: 25
+}
 ]
 };
 

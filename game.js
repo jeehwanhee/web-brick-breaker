@@ -42,6 +42,19 @@ const skillKeys = ["Q", "W", "E"];
 let bossSkillTimer = null;
 const BOSS_ATTACK_DELAY = 5000;
 
+const BOSS_WARNING_TIME = 1000;
+const BOSS_RETURN_PAUSE_TIME = 1000;
+
+let bossPhase = "normal";
+// normal: 평상시
+// warning: 보스 공격 전 경고
+// attacking: 보스 공격 중
+// returnPause: 보스 공격 끝난 직후 공 멈춤
+
+let bossWarningTimer = null;
+let bossReturnTimer = null;
+
+
 let isBossAttacking = false;
 let currentBossPattern = null;
 let bossProjectiles = [];
@@ -63,7 +76,7 @@ window.addEventListener("load", () => {
 
 
     screenBack();
-	
+    
     canvas = document.querySelector('#canvas');
     context = canvas.getContext('2d');
     canvasWidth = canvas.width;
@@ -71,18 +84,18 @@ window.addEventListener("load", () => {
 
     //바 좌우 움직임 관련 키 입력
     document.addEventListener("keydown", (e) => {
-	    if (e.key === "Right" || e.key === "ArrowRight") 
-	    	rightPressed = true;
-	    else if (e.key === "Left" || e.key === "ArrowLeft") 
-	    	leftPressed = true;
-	});
+       if (e.key === "Right" || e.key === "ArrowRight") 
+          rightPressed = true;
+      else if (e.key === "Left" || e.key === "ArrowLeft") 
+          leftPressed = true;
+  });
 
-	document.addEventListener("keyup", (e) => {
-	    if (e.key === "Right" || e.key === "ArrowRight") 
-	    	rightPressed = false;
-	    else if (e.key === "Left" || e.key === "ArrowLeft") 
-	    	leftPressed = false;
-	});
+    document.addEventListener("keyup", (e) => {
+       if (e.key === "Right" || e.key === "ArrowRight") 
+          rightPressed = false;
+      else if (e.key === "Left" || e.key === "ArrowLeft") 
+          leftPressed = false;
+  });
 
     //게임시작 버튼 (처음 이후에는 pause, resume 역할)
     const controlButton = document.querySelector("#controlButton");
@@ -96,30 +109,30 @@ window.addEventListener("load", () => {
             screenMove("storyScreen");
 
         }
-    	else if (isRunning) {
-    		controlButton.innerText = "resume";
-    		isRunning = false;
-    	}
-    	else {
-    		controlButton.innerText = "pause";
-    		isRunning = true;
-    		startGame();
-    	}
-    });
+        else if (isRunning) {
+          controlButton.innerText = "resume";
+          isRunning = false;
+      }
+      else {
+          controlButton.innerText = "pause";
+          isRunning = true;
+          startGame();
+      }
+  });
 
     //스킬
     window.addEventListener('keydown', (event) => {
         if (event.repeat) return;
         switch (event.key.toLowerCase()) {
-            case 'q':
-                useSkill('Q');
-                break;
-            case 'w':
-                useSkill('W');
-                break;
-            case 'e':
-                useSkill('E');
-                break;
+        case 'q':
+            useSkill('Q');
+            break;
+        case 'w':
+            useSkill('W');
+            break;
+        case 'e':
+            useSkill('E');
+            break;
         }
     });
 
@@ -226,9 +239,9 @@ const initAnimation = () => {
     const dx = 6;
     const dy = -6;
     const color = "#FF0000";
-	ball = new Ball(x,y,dx,dy,color);
+    ball = new Ball(x,y,dx,dy,color);
 
-	bar = new Bar();
+    bar = new Bar();
 };
 
 //프레임마다 움직일 애니메이션, updateUi호출, 공, 바, 블록 갱신
@@ -237,24 +250,87 @@ const animate = () => {
         return;
     }
 
+    updateUi();
     context.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    if (isBossAttacking) {
+    if (bossPhase === "warning") {
+    // WARNING 중: 공은 멈춤, 블럭은 보임, 바는 숨기고 캐릭터만 보임
+        drawNormalGame(false, false);
+        drawBossWarning();
+    }
+    else if (bossPhase === "attacking") {
+    // 보스 패턴 중: 공/블럭/바 숨김, 캐릭터만 보임
         updateBossProjectiles();
-        bar.update();
+        updateCharacterOnly();
         checkBossAttackEnd();
-    } else {
-        ball.update();
-        bar.update();
-
-        bricks.forEach((brick) => {
-            brick.draw();
-        });
+    }
+    else if (bossPhase === "returnPause") {
+    // 보스 패턴 끝난 직후: 공/블럭 다시 보임, 공은 1초 멈춤
+    // 바도 다시 보이게 하려면 true
+        drawNormalGame(false, true);
+    }
+    else {
+    // 평상시
+        drawNormalGame(true, true);
     }
 
     animationId = requestAnimationFrame(animate);
-    updateUi();
 };
+
+const drawNormalGame = (moveBall, showBar = true) => {
+    if (moveBall) {
+        ball.update();
+    } else {
+        ball.draw();
+    }
+
+    if (showBar) {
+        bar.update();
+    } else {
+        updateCharacterOnly();
+    }
+
+    bricks.forEach((brick) => {
+        brick.draw();
+    });
+};
+const updateCharacterOnly = () => {
+    if (rightPressed && bar.x < canvasWidth - bar.width) {
+        bar.x += bar.speed;
+    } else if (leftPressed && bar.x > 0) {
+        bar.x -= bar.speed;
+    }
+
+    context.beginPath();
+    context.drawImage(
+        characterImg,
+        bar.x + (bar.width - 100) / 2,
+        bar.y + 10,
+        100,
+        150
+        );
+    context.closePath();
+};
+
+const drawBossWarning = () => {
+    context.save();
+
+    context.fillStyle = "rgba(0, 0, 0, 0.45)";
+    context.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    context.fillStyle = "red";
+    context.font = "bold 64px Arial";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText("WARNING!", canvasWidth / 2, canvasHeight / 2 - 40);
+
+    context.fillStyle = "white";
+    context.font = "bold 28px Arial";
+    context.fillText("보스 공격이 시작됩니다", canvasWidth / 2, canvasHeight / 2 + 30);
+
+    context.restore();
+};
+
 const startBossPattern = () => {
     if (bossSkillTimer !== null) return;
     if (isBossAttacking) return;
@@ -267,19 +343,33 @@ const startBossPattern = () => {
 
 const startGame = () => {
     startBossPattern();
-	animate();
+    animate();
 };
 
 const startBossAttackPhase = () => {
     if (!isRunning) return;
-    if (isBossAttacking) return;
+    if (bossPhase !== "normal") return;
+
+    bossPhase = "warning";
+
+    bossWarningTimer = setTimeout(() => {
+        bossWarningTimer = null;
+        beginBossAttack();
+    }, BOSS_WARNING_TIME);
+};
+
+const beginBossAttack = () => {
+    if (!isRunning) return;
 
     currentBossPattern = pickBossPattern();
 
     if (currentBossPattern === null) {
+        bossPhase = "normal";
+        startBossPattern();
         return;
     }
 
+    bossPhase = "attacking";
     isBossAttacking = true;
 
     bossProjectiles = [];
@@ -294,6 +384,8 @@ const startBossAttackPhase = () => {
     }
 };
 
+
+
 const pickBossPattern = () => {
     const patterns = bossPatternConfigs[level];
     const randomIndex = Math.floor(Math.random() * patterns.length);
@@ -303,41 +395,41 @@ const pickBossPattern = () => {
 
 const createBossPattern = (pattern) => {
     switch (pattern.type) {
-        case "powder":
-            createMothPowder(pattern);
-            break;
+    case "powder":
+        createMothPowder(pattern);
+        break;
 
-        case "diagonalWind":
-            createDiagonalWind(pattern);
-            break;
+    case "diagonalWind":
+        createDiagonalWind(pattern);
+        break;
 
-        case "charge":
-            createCharge(pattern);
-            break;
+    case "charge":
+        createCharge(pattern);
+        break;
 
-        case "lightningRain":
-            createLightningRain(pattern);
-            break;
+    case "lightningRain":
+        createLightningRain(pattern);
+        break;
 
-        case "doubleFireball":
-            createDoubleFireball(pattern);
-            break;
+    case "doubleFireball":
+        createDoubleFireball(pattern);
+        break;
 
-        case "homingBat":
-            createHomingBat(pattern);
-            break;
+    case "homingBat":
+        createHomingBat(pattern);
+        break;
 
-        case "shockwave":
-            createGanonShockwave(pattern);
-            break;
+    case "shockwave":
+        createGanonShockwave(pattern);
+        break;
 
-        case "fireZone":
-            createFireZone(pattern);
-            break;
+    case "fireZone":
+        createFireZone(pattern);
+        break;
 
-        case "tridentConverge":
-            createTridentConverge(pattern);
-            break;
+    case "tridentConverge":
+        createTridentConverge(pattern);
+        break;
     }
 };
 
@@ -442,7 +534,7 @@ const isProjectileOut = (projectile) => {
             projectile.x > canvasWidth + margin ||
             projectile.y < -margin ||
             projectile.y > canvasHeight + margin
-        );
+            );
     }
 
     return (    
@@ -450,7 +542,7 @@ const isProjectileOut = (projectile) => {
         projectile.x > canvasWidth + margin ||
         projectile.y + projectile.height < -margin ||
         projectile.y > canvasHeight + margin
-    );
+        );
 };
 
 const updateBossProjectiles = () => {
@@ -543,7 +635,7 @@ const drawBossProjectile = (projectile) => {
                     projectile.y - projectile.radius,
                     projectile.radius * 2,
                     projectile.radius * 2
-                );
+                    );
             } else {
                 context.drawImage(
                     img,
@@ -551,7 +643,7 @@ const drawBossProjectile = (projectile) => {
                     projectile.y,
                     projectile.width,
                     projectile.height
-                );
+                    );
             }
 
             context.restore();
@@ -672,37 +764,45 @@ const createGanonShockwave = (pattern) => {
         });
     }
 };
-
 const createFireZone = (pattern) => {
     const damage = getBossPatternDamage(pattern);
 
-    let fireX = bar.x + bar.width / 2 - pattern.width / 2;
-    let fireY = bar.y + bar.height / 2 - pattern.height / 2;
+    const count = pattern.count || 3;
+    const gap = pattern.gap || 300;
 
-    // 화면 밖으로 안 나가게 보정
-    fireX = Math.max(0, Math.min(fireX, canvasWidth - pattern.width));
-    fireY = Math.max(0, Math.min(fireY, canvasHeight - pattern.height));
+    const centerX = bar.x + bar.width / 2;
+    const fireY = bar.y + bar.height / 2 - pattern.height / 2;
 
-    bossProjectiles.push({
-        kind: "fire",
-        x: fireX,
-        y: fireY,
-        width: pattern.width,
-        height: pattern.height,
+    const startOffset = -gap * Math.floor(count / 2);
 
-        damage: damage,
-        damageInterval: pattern.damageInterval,
+    for (let i = 0; i < count; i++) {
+        let fireX = centerX - pattern.width / 2 + startOffset + i * gap;
 
-        warningTime: pattern.warningTime,
-        activeTime: pattern.activeTime,
-        createdAt: Date.now(),
-        lastDamageTime: 0,
+        // 화면 밖으로 안 나가게 보정
+        fireX = Math.max(0, Math.min(fireX, canvasWidth - pattern.width));
 
-        imageSrc: pattern.imageSrc,
-        hit: false
-    });
+        bossProjectiles.push({
+            kind: "fire",
+
+            x: fireX,
+            y: fireY,
+
+            width: pattern.width,
+            height: pattern.height,
+
+            damage: damage,
+            damageInterval: pattern.damageInterval,
+
+            warningTime: pattern.warningTime,
+            activeTime: pattern.activeTime,
+            createdAt: Date.now(),
+            lastDamageTime: 0,
+
+            imageSrc: pattern.imageSrc,
+            hit: false
+        });
+    }
 };
-
 const createTridentConverge = (pattern) => {
     const targetX = bar.x + bar.width / 2;
     const targetY = bar.y + bar.height / 2;
@@ -787,7 +887,7 @@ const drawFireZone = (projectile, now) => {
             projectile.y,
             projectile.width,
             projectile.height
-        );
+            );
     } else {
         context.fillStyle = "rgba(255, 80, 0, 0.8)";
         context.fillRect(projectile.x, projectile.y, projectile.width, projectile.height);
@@ -802,7 +902,7 @@ const isProjectileHitBar = (projectile) => {
     const barTop = bar.y;
     const barBottom = bar.y + bar.height;
 
-   if (projectile.kind === "circle" || projectile.kind === "homing") {
+    if (projectile.kind === "circle" || projectile.kind === "homing") {
         const closestX = Math.max(barLeft, Math.min(projectile.x, barRight));
         const closestY = Math.max(barTop, Math.min(projectile.y, barBottom));
 
@@ -822,7 +922,7 @@ const isProjectileHitBar = (projectile) => {
         barLeft < projectileRight &&
         barBottom > projectileTop &&
         barTop < projectileBottom
-    );
+        );
 };
 
 const checkBossAttackEnd = () => {
@@ -839,7 +939,15 @@ const endBossAttackPhase = () => {
     bossProjectiles = [];
     clearBossPatternTimeouts();
 
-    startBossPattern();
+    bossPhase = "returnPause";
+
+    bossReturnTimer = setTimeout(() => {
+        bossReturnTimer = null;
+        bossPhase = "normal";
+
+        // 다음 보스 공격 예약
+        startBossPattern();
+    }, BOSS_RETURN_PAUSE_TIME);
 };
 
 const clearBossPatternTimeouts = () => {
@@ -854,8 +962,15 @@ const stopBossPattern = () => {
     clearTimeout(bossSkillTimer);
     bossSkillTimer = null;
 
+    clearTimeout(bossWarningTimer);
+    bossWarningTimer = null;
+
+    clearTimeout(bossReturnTimer);
+    bossReturnTimer = null;
+
     clearBossPatternTimeouts();
 
+    bossPhase = "normal";
     isBossAttacking = false;
     currentBossPattern = null;
     bossProjectiles = [];
@@ -867,11 +982,11 @@ const stopBossPattern = () => {
 const updateUi = () => {
     const bossLifeText = document.querySelector("#bossLife");
     const lifeText = document.querySelector("#life");
-	const countText = document.querySelector("#count");
+    const countText = document.querySelector("#count");
 
     bossLifeText.innerText = `보스 체력 : ${bossLife >= 0 ? bossLife : 0} / ${totBossLife}`;
     lifeText.innerText = `내 체력 : ${life >= 0 ? life : 0} / ${totLife}`;
-	countText.innerText = `남은 부메랑 : ${count}`;
+    countText.innerText = `남은 부메랑 : ${count}`;
 
 
     if (bossLife <= 0) {
