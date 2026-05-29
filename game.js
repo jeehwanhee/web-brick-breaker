@@ -59,6 +59,7 @@ let bossReturnTimer = null;
 let isBossAttacking = false;
 let currentBossPattern = null;
 let bossProjectiles = [];
+let chainLightningEffects = [];
 
 let bossPatternTimeouts = [];
 let pendingSpawns = 0;
@@ -66,6 +67,29 @@ let spawningFinished = false;
 
 const bossSkillImages = {};
 
+
+const TIME_WARP_SCALE = 0.5;
+const barrierheight = 30;
+
+const BURN_DAMAGE = 3;
+const BURN_INTERVAL = 500;
+const BURN_DURATION = 3000;
+
+const CHAIN_LIGHTNING_DAMAGE = 10;
+const CHAIN_LIGHTNING_TARGET_COUNT = 4;
+const CHAIN_LIGHTNING_RANGE = 220;
+
+const REFLECT_SHIELD_RADIUS = 95;
+const REFLECT_DAMAGE = 40;
+
+let originbarspeed;
+let isBarrieractive = false;
+let isPenetrationactive = false;
+let isShotballactive = false;
+let isTimeWarpActive = false;
+let isBurningBallActive = false;
+let isChainLightningActive = false;
+let isReflectActive = false;
 
 window.addEventListener("load", () => {
     loadBossSkillImages();
@@ -150,6 +174,7 @@ const initBoostScreen = () => {
         if (showSkills.includes(skill)) continue;
         if (skills.includes(skill)) continue;
         showSkills.push(skill);
+        
     }
 
     for (let i=0; i<3; i++) {
@@ -169,6 +194,12 @@ const initBoostScreen = () => {
 
         container.addEventListener("click", () => {
             skills.push(showSkills[i]);
+            skillStates[skills.length - 1] = {
+            name: showSkills[i],
+            lastUsed: 0,
+            activeUntil: 0,
+            isActive: false
+        };
             initScreen();
             initAnimation();
             screenMove("gameScreen");
@@ -208,22 +239,27 @@ const initScreen = () => {
     skillsContainer.innerHTML = "";
     skills.forEach((skill, idx) => {
         const element = document.createElement("div");
-        element.setAttribute("id",`skill${idx+1}`);
-        element.setAttribute("display", "flex");
+        element.setAttribute("id", `skill${idx + 1}`);
+        element.classList.add("skillBox");
+        element.classList.add("skillReady");
 
         const skillName = document.createElement("div");
+        skillName.classList.add("skillName");
         skillName.innerText = skill;
 
         const skillKey = document.createElement("div");
+        skillKey.classList.add("skillKey");
         skillKey.innerText = skillKeys[idx];
+
+        const skillCooldown = document.createElement("div");
+        skillCooldown.classList.add("skillCooldown");
+        skillCooldown.innerText = "READY";
 
         element.append(skillName);
         element.append(skillKey);
-
+        element.append(skillCooldown);
 
         skillsContainer.append(element);
-
-
     });
 
 
@@ -234,12 +270,14 @@ const initScreen = () => {
     controlButton.style.display = "block";
 
     updateUi();
+    updateSkillUi();
 };
 
 //캔버스 관련 초기 설정 (bricks는 initScreen() -> levelNBricks()에서 초기화)
 const initAnimation = () => {
     resetBalls();
     bar = new Bar();
+    originbarspeed = bar.speed;
 };
 
 const getCharacterHitBox = () => {
@@ -251,11 +289,21 @@ const getCharacterHitBox = () => {
     };
 };  
 
+const getReflectShield = () => {
+    const character = getCharacterHitBox();
+
+    return {
+        x: character.x + character.width / 2,
+        y: character.y + character.height / 2,
+        radius: REFLECT_SHIELD_RADIUS
+    };
+};
+
 const createNewBall = (
     x = canvasWidth / 2,
     y = canvasHeight - 200,
-    dx = 6,
-    dy = -6,
+    dx = 3,
+    dy = -3,
     color = "#FF0000"
 ) => {
     return new Ball(x, y, dx, dy, color);
@@ -279,10 +327,299 @@ const addBall = () => {
 
     balls.push(newBall);
 };
+const fireShotballs = (baseBall) => {
+    const shotBallVelocities = [
+        { dx: -6, dy: -3 },
+        { dx: -4, dy: -5 },
+        { dx: 0,  dy: -6 },
+        { dx: 4,  dy: -5 },
+        { dx: 6,  dy: -3 },
+    ];
+
+    shotBallVelocities.forEach((velocity) => {
+        const shotball = createNewBall(
+            baseBall.x,
+            baseBall.y,
+            velocity.dx,
+            velocity.dy,
+            "#191919"
+        );
+
+        shotball.isShotball = true;
+        balls.push(shotball);
+    });
+};
+const firePenetrationBalls = (baseBall) => {
+    const speed = 3;
+
+    const penetrationBallLeft = createNewBall(
+        baseBall.x,
+        baseBall.y,
+        -speed,
+        -speed,
+        "#AA00FF"
+    );
+
+    const penetrationBallRight = createNewBall(
+        baseBall.x,
+        baseBall.y,
+        speed,
+        -speed,
+        "#AA00FF"
+    );
+
+    penetrationBallLeft.isPenetrationBall = true;
+    penetrationBallRight.isPenetrationBall = true;
+
+    balls.push(penetrationBallLeft);
+    balls.push(penetrationBallRight);
+};
+
+const getProjectileSpeedScale = () => {
+    return isTimeWarpActive ? TIME_WARP_SCALE : 1;
+};
+
+const getBallEffects = () => {
+    return {
+        barrier: isBarrieractive,
+        penetrationReady: isPenetrationactive,
+        shotballReady : isShotballactive,
+        speedScale: getProjectileSpeedScale(),
+    };
+};
+
+const updateBallWithEffects = (b, effects) => {
+    handleBallWallCollision(b);
+    handleBallBarCollision(b, effects);
+    handleBallBottomCollision(b, effects);
+    handleBallBrickCollision(b, effects);
+
+    b.x += b.dx * effects.speedScale;
+    b.y += b.dy * effects.speedScale;
+
+    b.draw();
+};
+
+const handleBallWallCollision = (b) => {
+    if (b.x < b.radius || b.x > canvasWidth - b.radius) {
+        b.dx = -b.dx;
+    }
+
+    if (b.y < b.radius) {
+        b.dy = -b.dy;
+    }
+};
+
+const handleBallBarCollision = (b, effects) => {
+    const hitBar =
+        b.y + b.radius > bar.y &&
+        b.y - b.radius < bar.y + 10 &&
+        b.x - b.radius >= bar.x &&
+        b.x + b.radius <= bar.x + bar.width;
+
+    if (!hitBar) return;
+
+    b.dy = -Math.abs(b.dy);
+
+    // 관통 공 스킬이 준비되어 있으면
+    // 처음 바에 튕긴 공 위치에서 관통 공 2개 발사
+    if (effects.penetrationReady) {
+        firePenetrationBalls(b);
+        deactivePlayerSkill_penetration();
+        deactivateSkillStateByName("관통 공");
+    }
+
+    if (effects.shotballReady) {
+        fireShotballs(b);
+        deactivatePlayerSkill_shotball();
+        deactivateSkillStateByName("산탄공");
+    }
+};
+
+const handleBallBottomCollision = (b, effects) => {
+    const hitBottom = b.y > canvasHeight - b.radius;
+    const hitBarrier = b.y > canvasHeight - barrierheight - b.radius;
+
+    // 베리어가 켜져 있으면 바닥에 떨어지기 전에 베리어에서 튕김
+    if (effects.barrier && hitBarrier) {
+        b.dy = -Math.abs(b.dy);
+        return;
+    }
+
+    // 베리어가 없으면 바닥에 닿은 공만 제거
+    if (hitBottom) {
+        b.isDead = true;
+    }
+};
+
+const handleBallBrickCollision = (b, effects) => {
+    if (b.isDead) return;
+    bricks.forEach((brick) => {
+        if (b.isDead) return;
+        const isCollidingY =
+            b.y + b.radius > brick.y &&
+            b.y - b.radius < brick.y + brick.height &&
+            b.x > brick.x &&
+            b.x < brick.x + brick.width;
+
+        const isCollidingX =
+            b.x + b.radius > brick.x &&
+            b.x - b.radius < brick.x + brick.width &&
+            b.y > brick.y &&
+            b.y < brick.y + brick.height;
+
+        const isColliding = isCollidingY || isCollidingX;
+
+        if (!isColliding) {
+            removeBallHitBrickMemory(b, brick);
+            return;
+        }
+
+        // 이 공 자체가 관통 공이면 튕기지 않고 데미지만 준다
+        if (b.isPenetrationBall) {
+            hitBrickOnceWhileOverlapping(b, brick);
+            return;
+        }
+
+        // 일반 공은 기존처럼 튕긴다
+        let flag = false;
+
+        if (isCollidingY) {
+            b.dy = -b.dy;
+            flag = true;
+        }
+
+        if (isCollidingX) {
+            b.dx = -b.dx;
+            flag = true;
+        }
+
+        if (flag) {
+            onBallHitBrick(b, brick);
+        }
+    });
+};
+
+const onBallHitBrick = (b, brick) => {
+    brickHit(brick);
+
+    if (isBurningBallActive) {
+        applyBurnToBrick(brick);
+        deactivatePlayerSkill_burningBall();
+        deactivateSkillStateByName("타오르는 공");
+    }
+
+    if (isChainLightningActive) {
+        triggerChainLightning(brick);
+        deactivatePlayerSkill_chainLightning();
+        deactivateSkillStateByName("연쇄 번개");
+    }
+};
+
+const applyBurnToBrick = (brick) => {
+    if (!brick) return;
+    if (!bricks.includes(brick)) return;
+
+    // 이미 불타는 중이면 중복 적용하지 않음
+    if (brick.isBurning) return;
+
+    brick.isBurning = true;
+
+    const burnStartTime = Date.now();
+
+    brick.burnTimer = setInterval(() => {
+        const now = Date.now();
+
+        // 이미 제거된 벽돌이면 중단
+        if (!bricks.includes(brick)) {
+            clearInterval(brick.burnTimer);
+            brick.burnTimer = null;
+            return;
+        }
+
+        // 지속시간 끝나면 중단
+        if (now - burnStartTime >= BURN_DURATION) {
+            brick.isBurning = false;
+            clearInterval(brick.burnTimer);
+            brick.burnTimer = null;
+            return;
+        }
+
+        damageBrick(brick, BURN_DAMAGE);
+    }, BURN_INTERVAL);
+};
+
+const getDistanceBetweenBricks = (brickA, brickB) => {
+    const dx = brickA.centerX - brickB.centerX;
+    const dy = brickA.centerY - brickB.centerY;
+
+    return Math.sqrt(dx * dx + dy * dy);
+};
+
+const findChainLightningTargets = (originBrick) => {
+    return bricks
+        .filter((brick) => {
+            if (brick === originBrick) return false;
+            if (brick.hp <= 0) return false;
+
+            const distance = getDistanceBetweenBricks(originBrick, brick);
+            return distance <= CHAIN_LIGHTNING_RANGE;
+        })
+        .sort((a, b) => {
+            return getDistanceBetweenBricks(originBrick, a) - getDistanceBetweenBricks(originBrick, b);
+        })
+        .slice(0, CHAIN_LIGHTNING_TARGET_COUNT);
+};
+
+const triggerChainLightning = (originBrick) => {
+    if (!originBrick) return;
+
+    const targets = findChainLightningTargets(originBrick);
+    const now = Date.now();
+
+    targets.forEach((targetBrick) => {
+        damageBrick(targetBrick, CHAIN_LIGHTNING_DAMAGE);
+
+        chainLightningEffects.push({
+            startX: originBrick.centerX,
+            startY: originBrick.centerY,
+            endX: targetBrick.centerX,
+            endY: targetBrick.centerY,
+            createdAt: now,
+            duration: 180
+        });
+    });
+};
+const hitBrickOnceWhileOverlapping = (b, brick) => {
+    if (b.isDead) return;
+
+    if (!b.hitBricks.includes(brick)) {
+        onBallHitBrick(b, brick);
+        b.hitBricks.push(brick);
+
+        if (b.isPenetrationBall) {
+            b.totalhitBricks++;
+
+            if (b.totalhitBricks >= 10) {
+                b.isDead = true;
+            }
+        }
+    }
+};
+
+const removeBallHitBrickMemory = (b, brick) => {
+    const index = b.hitBricks.indexOf(brick);
+
+    if (index > -1) {
+        b.hitBricks.splice(index, 1);
+    }
+};
 
 const updateBalls = () => {
+    const effects = getBallEffects();
+
     balls.forEach((b) => {
-        b.update();
+        updateBallWithEffects(b, effects);
     });
 
     balls = balls.filter((b) => !b.isDead);
@@ -330,6 +667,46 @@ const animate = () => {
     updateUi();
     context.clearRect(0, 0, canvasWidth, canvasHeight);
 
+    const now = Date.now(); //스킬 지속시간이 지나면 스킬 비활성화
+    skillStates.forEach((state) => { 
+        // 스킬이 활성화 상태인데, 종료 시간(activeUntil)이 현재 시간보다 과거라면?
+        if (state.isActive && now >= state.activeUntil) {
+            state.isActive = false; // 활성화 꺼줌
+
+            // game.js 내부의 객체 상태를 원상복구 시키는 로직 실행
+            if (state.name === "유체화") {
+                deactivatePlayerSkill_ghost(); // 원래 속도로 복구
+            }
+            if (state.name === "베리어 생성") {
+                deactivePlayerSkill_barrier();
+            }
+            if (state.name === "관통 공") {
+                deactivePlayerSkill_penetration();
+            }
+            if (state.name === "산탄공") {
+                deactivatePlayerSkill_shotball();
+            }
+            if (state.name === "시간감속") {
+                deactivatePlayerSkill_timeWarp();
+            }
+            if (state.name === "타오르는 공") {
+                deactivatePlayerSkill_burningBall();
+            }
+            if (state.name === "연쇄 번개") {
+                deactivatePlayerSkill_chainLightning();
+            }
+            if (state.name === "튕겨 내기") {
+                deactivatePlayerSkill_reflect();
+            }
+        }
+    });
+    
+    if(isBarrieractive){
+        context.save();
+        context.fillStyle = "rgba(0, 191, 255, 0.4)"; 
+        context.fillRect(0, canvasHeight - barrierheight, canvasWidth, barrierheight);
+        context.restore();
+    }
     if (bossPhase === "warning") {
     // WARNING 중: 공은 멈춤, 블럭은 보임, 바는 숨기고 캐릭터만 보임
         drawNormalGame(false, false);
@@ -350,7 +727,7 @@ const animate = () => {
     // 평상시
         drawNormalGame(true, true);
     }
-
+    drawReflectShield();
     animationId = requestAnimationFrame(animate);
 };
 
@@ -370,6 +747,8 @@ const drawNormalGame = (moveBall, showBar = true) => {
     bricks.forEach((brick) => {
         brick.draw();
     });
+
+    drawChainLightningEffects();
 };
 const updateCharacterOnly = () => {
     if (rightPressed && bar.x < canvasWidth - bar.width) {
@@ -405,6 +784,48 @@ const drawBossWarning = () => {
     context.font = "bold 28px Arial";
     context.fillText("보스 공격이 시작됩니다", canvasWidth / 2, canvasHeight / 2 + 30);
 
+    context.restore();
+};
+
+const drawChainLightningEffects = () => {
+    const now = Date.now();
+
+    chainLightningEffects.forEach((effect) => {
+        const age = now - effect.createdAt;
+
+        if (age > effect.duration) return;
+
+        context.save();
+        context.beginPath();
+        context.moveTo(effect.startX, effect.startY);
+        context.lineTo(effect.endX, effect.endY);
+        context.strokeStyle = "rgba(120, 220, 255, 0.9)";
+        context.lineWidth = 4;
+        context.stroke();
+        context.closePath();
+        context.restore();
+    });
+
+    chainLightningEffects = chainLightningEffects.filter((effect) => {
+        return now - effect.createdAt <= effect.duration;
+    });
+};
+
+const drawReflectShield = () => {
+    if (!isReflectActive) return;
+    if (!bar) return;
+
+    const shield = getReflectShield();
+
+    context.save();
+    context.beginPath();
+    context.arc(shield.x, shield.y, shield.radius, 0, Math.PI * 2);
+    context.fillStyle = "rgba(120, 220, 255, 0.18)";
+    context.fill();
+    context.lineWidth = 5;
+    context.strokeStyle = "rgba(120, 220, 255, 0.9)";
+    context.stroke();
+    context.closePath();
     context.restore();
 };
 
@@ -624,12 +1045,17 @@ const isProjectileOut = (projectile) => {
 
 const updateBossProjectiles = () => {
     const now = Date.now();
+    const speedScale = getProjectileSpeedScale();
 
     bossProjectiles.forEach((projectile) => {
         if (projectile.kind === "fire") {
             drawFireZone(projectile, now);
 
-            if (isFireActive(projectile, now) && isProjectileHitBar(projectile)) {
+            if (
+                !projectile.reflected &&
+                isFireActive(projectile, now) &&
+                isProjectileHitBar(projectile)
+            ) {
                 if (now - projectile.lastDamageTime >= projectile.damageInterval) {
                     projectile.lastDamageTime = now;
                     life -= projectile.damage;
@@ -639,15 +1065,30 @@ const updateBossProjectiles = () => {
 
             return;
         }
+        // 반사된 투사체 이동
+        if (projectile.reflected) {
+            projectile.x += projectile.dx * speedScale;
+            projectile.y += projectile.dy * speedScale;
+
+            drawBossProjectile(projectile);
+            checkReflectedProjectileHitBoss(projectile);
+            return;
+        }
 
         if (projectile.kind === "homing") {
-            updateHomingProjectile(projectile);
+            updateHomingProjectile(projectile, speedScale);
         } else {
-            projectile.x += projectile.dx;
-            projectile.y += projectile.dy;
+            projectile.x += projectile.dx * speedScale;
+            projectile.y += projectile.dy * speedScale;
         }
 
         drawBossProjectile(projectile);
+
+        //  플레이어 피격보다 먼저 방어막 반사 판정
+        if (isProjectileHitReflectShield(projectile)) {
+            reflectBossProjectile(projectile);
+            return;
+        }
 
         if (!projectile.hit && isProjectileHitBar(projectile)) {
             projectile.hit = true;
@@ -657,6 +1098,8 @@ const updateBossProjectiles = () => {
     });
 
     bossProjectiles = bossProjectiles.filter((projectile) => {
+        if (projectile.isDead) return false;
+
         if (projectile.kind === "fire") {
             const now = Date.now();
             return now - projectile.createdAt < projectile.warningTime + projectile.activeTime;
@@ -799,21 +1242,22 @@ const createHomingBat = (pattern) => {
     }
 };
 
-const updateHomingProjectile = (projectile) => {
+const updateHomingProjectile = (projectile, speedScale = 1) => {
     const targetX = bar.x + bar.width / 2;
     const diffX = targetX - projectile.x;
 
-    // x축만 바를 따라감
-    if (Math.abs(diffX) <= projectile.xSpeed) {
+    const xMove = projectile.xSpeed * speedScale;
+    const yMove = projectile.ySpeed * speedScale;
+
+    if (Math.abs(diffX) <= xMove) {
         projectile.x = targetX;
     } else if (diffX > 0) {
-        projectile.x += projectile.xSpeed;
+        projectile.x += xMove;
     } else {
-        projectile.x -= projectile.xSpeed;
+        projectile.x -= xMove;
     }
 
-    // y축은 무조건 아래로 내려감
-    projectile.y += projectile.ySpeed;
+    projectile.y += yMove;
 };
 
 const createGanonShockwave = (pattern) => {
@@ -1014,7 +1458,107 @@ const isProjectileHitBar = (projectile) => {
         targetBottom > projectileTop &&
         targetTop < projectileBottom
     );
-};  
+};
+
+const isProjectileHitReflectShield = (projectile) => {
+    if (!isReflectActive) return false;
+    if (projectile.reflected) return false;
+    if (projectile.kind === "fire") return false;
+
+    const shield = getReflectShield();
+
+    if (projectile.kind === "circle" || projectile.kind === "homing") {
+        const dx = projectile.x - shield.x;
+        const dy = projectile.y - shield.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        return distance <= projectile.radius + shield.radius;
+    }
+
+    const closestX = Math.max(
+        projectile.x,
+        Math.min(shield.x, projectile.x + projectile.width)
+    );
+
+    const closestY = Math.max(
+        projectile.y,
+        Math.min(shield.y, projectile.y + projectile.height)
+    );
+
+    const dx = shield.x - closestX;
+    const dy = shield.y - closestY;
+
+    return dx * dx + dy * dy <= shield.radius * shield.radius;
+};
+
+const reflectBossProjectile = (projectile) => {
+    projectile.reflected = true;
+    projectile.hit = true;
+
+    const shield = getReflectShield();
+
+    // 보스 쪽으로 날아가게
+    const targetX = canvasWidth / 2;
+    const targetY = 60;
+
+    const startX = getProjectileCenterX(projectile);
+    const startY = getProjectileCenterY(projectile);
+
+    const vx = targetX - startX;
+    const vy = targetY - startY;
+    const length = Math.sqrt(vx * vx + vy * vy) || 1;
+
+    const speed = 10;
+
+    projectile.dx = (vx / length) * speed;
+    projectile.dy = (vy / length) * speed;
+
+    // homing은 더 이상 유도하지 않도록 reflected 상태에서 일반 이동 처리
+    projectile.x = startX;
+    projectile.y = startY;
+
+    // rect 타입도 반사 후 중심 좌표 기준으로 움직이게 보정
+    if (projectile.kind !== "circle" && projectile.kind !== "homing") {
+        projectile.x = startX - projectile.width / 2;
+        projectile.y = startY - projectile.height / 2;
+    }
+};
+
+const checkReflectedProjectileHitBoss = (projectile) => {
+    if (!projectile.reflected) return false;
+
+    const centerY = getProjectileCenterY(projectile);
+
+    // 화면 위쪽 보스 영역에 도달하면 보스에게 피해
+    if (centerY <= 90) {
+        bossLife -= REFLECT_DAMAGE;
+        bossImgUpdate("attacked");
+        updateUi();
+
+        projectile.isDead = true;
+        return true;
+    }
+
+    return false;
+};
+
+
+const getProjectileCenterX = (projectile) => {
+    if (projectile.kind === "circle" || projectile.kind === "homing") {
+        return projectile.x;
+    }
+
+    return projectile.x + projectile.width / 2;
+};
+
+const getProjectileCenterY = (projectile) => {
+    if (projectile.kind === "circle" || projectile.kind === "homing") {
+        return projectile.y;
+    }
+
+    return projectile.y + projectile.height / 2;
+};
+
 const checkBossAttackEnd = () => {
     if (!isBossAttacking) return;
 
@@ -1067,6 +1611,97 @@ const stopBossPattern = () => {
     pendingSpawns = 0;
     spawningFinished = false;
 };
+const isSkillEffectActive = (skillName) => {
+    if (skillName === "베리어 생성") {
+        return isBarrieractive;
+    }
+
+    if (skillName === "유체화") {
+        return false;
+    }
+
+    if (skillName === "시간감속") {
+        return isTimeWarpActive;
+    }
+
+    if (skillName === "관통 공") {
+        return isPenetrationactive;
+    }
+
+    if (skillName === "산탄공") {
+        return isShotballactive;
+    }
+
+    if (skillName === "타오르는 공") {
+        return isBurningBallActive;
+    }
+
+    if (skillName === "연쇄 번개") {
+        return isChainLightningActive;
+    }
+
+    if (skillName === "튕겨 내기") {
+        return isReflectActive;
+    }
+
+    return false;
+};
+
+const updateSkillUi = () => {
+    const now = Date.now();
+
+    skillStates.forEach((state, idx) => {
+        if (!state || !state.name) return;
+
+        const skillElement = document.querySelector(`#skill${idx + 1}`);
+        if (!skillElement) return;
+
+        const cooldownElement = skillElement.querySelector(".skillCooldown");
+        const config = skillData[state.name];
+
+        if (!config) return;
+
+        const cooldownEndTime = state.lastUsed + config.cooldown;
+        const cooldownLeft = cooldownEndTime - now;
+
+        const isEffectActive = isSkillEffectActive(state.name);
+
+        skillElement.classList.remove(
+            "skillReady",
+            "skillCooldownState",
+            "skillActiveState"
+        );
+
+        // 실제 스킬 효과가 살아있는 동안만 ACTIVE 표시
+        if (isEffectActive) {
+            skillElement.classList.add("skillActiveState");
+
+            if (cooldownElement) {
+                cooldownElement.innerText = "ACTIVE";
+            }
+
+            return;
+        }
+
+        // 효과가 끝났지만 쿨타임이 남아 있으면 쿨타임 표시
+        if (cooldownLeft > 0) {
+            skillElement.classList.add("skillCooldownState");
+
+            if (cooldownElement) {
+                cooldownElement.innerText = `${Math.ceil(cooldownLeft / 1000)}s`;
+            }
+
+            return;
+        }
+
+        // 쿨타임도 끝났으면 READY
+        skillElement.classList.add("skillReady");
+
+        if (cooldownElement) {
+            cooldownElement.innerText = "READY";
+        }
+    });
+};
 
 //캔버스 제외 화면 갱신, animate에서 호출 됨
 const updateUi = () => {
@@ -1078,6 +1713,7 @@ const updateUi = () => {
     lifeText.innerText = `내 체력 : ${life >= 0 ? life : 0} / ${totLife}`;
     countText.innerText = `남은 부메랑 : ${count}`;
 
+    updateSkillUi();
 
     if (bossLife <= 0) {
         //승리
@@ -1130,5 +1766,122 @@ const screenBack = () => {
 //q,w,e 키를 눌렀을때 -> 스킬 처리 
 //(레벨에 따라 q,w,e 중 어디까지 유효한지 확인해야함 = 레벨2는 e키는 작동X)
 const useSkill = (key) => {
+    if (!isRunning) return; 
+
+    let skillIdx = skillKeys.indexOf(key);
+    if (skillIdx === -1 || skillIdx > skills.length-1) return;
+    let skillname = skills[skillIdx];
+    let state = skillStates[skillIdx];
+    if (!state || !state.name) return; // 장착된 스킬이 없음
     
+
+    const config = skillData[state.name];
+    if (!config) return;
+    
+
+    const now = Date.now();
+
+    // 1. 쿨타임 체크 (현재시간 - 마지막 사용시간 >= 쿨타임)
+    if (now - state.lastUsed < config.cooldown) {
+        return;
+    }
+
+    // 2. 스킬 발동 상태 저장
+    state.lastUsed = now;
+    state.activeUntil = now + config.duration;
+    state.isActive = true;
+
+    // 3. 스킬 고유 효과 실행
+    if(skillname == "유체화"){
+        activatePlayerSkill_ghost();
+    }
+    if(skillname == "베리어 생성"){
+        activePlayerSkill_barrier();
+    }
+    if(skillname == "관통 공"){
+        activePlayerSkill_penetration();
+    }
+    if(skillname == "산탄공"){
+        activePlayerSkill_shotball();
+    }
+    if (skillname == "시간감속") {
+        activePlayerSkill_timeWarp();
+    }
+    if (skillname == "타오르는 공") {
+    activePlayerSkill_burningBall();
+    }
+    if (skillname == "연쇄 번개") {
+        activePlayerSkill_chainLightning();
+    }
+    if (skillname == "튕겨 내기") {
+        activePlayerSkill_reflect();
+    }
+    updateUi(); // UI에 즉시 반영 (예: 쿨타임 도는 애니메이션 시작 등)
+};
+
+const activatePlayerSkill_ghost = () =>{
+    bar.speed = originbarspeed*1.7;
 }
+const deactivatePlayerSkill_ghost = () =>{
+    bar.speed = originbarspeed;
+}
+
+const activePlayerSkill_barrier = () =>{
+    isBarrieractive = true;
+}
+const deactivePlayerSkill_barrier = ()=>{
+    isBarrieractive = false;
+}
+
+const activePlayerSkill_penetration = ()=>{
+    isPenetrationactive = true;
+}
+const deactivePlayerSkill_penetration = ()=>{
+    isPenetrationactive = false;
+}
+
+const activePlayerSkill_shotball = ()=>{
+    isShotballactive = true;
+}
+const deactivatePlayerSkill_shotball = ()=>{
+    isShotballactive = false;
+}
+
+const activePlayerSkill_timeWarp = () => {
+    isTimeWarpActive = true;
+};
+const deactivatePlayerSkill_timeWarp = () => {
+    isTimeWarpActive = false;
+};
+
+const activePlayerSkill_burningBall = () => {
+    isBurningBallActive = true;
+};
+const deactivatePlayerSkill_burningBall = () => {
+    isBurningBallActive = false;
+};
+
+const activePlayerSkill_chainLightning = () => {
+    isChainLightningActive = true;
+};
+const deactivatePlayerSkill_chainLightning = () => {
+    isChainLightningActive = false;
+};
+
+const activePlayerSkill_reflect = () => {
+    isReflectActive = true;
+};
+const deactivatePlayerSkill_reflect = () => {
+    isReflectActive = false;
+};
+
+const deactivateSkillStateByName = (skillName) => {
+    const state = skillStates.find((skillState) => {
+        return skillState.name === skillName;
+    });
+
+    if (!state) return;
+
+    state.isActive = false;
+    state.activeUntil = 0;
+};
