@@ -96,6 +96,11 @@ window.addEventListener("load", () => {
     
     const gameButton = document.querySelector("#gameButton");
     gameButton.addEventListener("click", () => {
+        // level 4는 엔딩 storyScreen이므로 전투/증강 화면으로 가지 않고 홈으로 돌아갑니다.
+        if(level==4){
+            screenMove("initScreen");
+            return;
+        }
         initBoostScreen();
     });
 
@@ -130,8 +135,10 @@ window.addEventListener("load", () => {
             controlButton.innerText = "pause";
             winning = false;
 
+            // 스테이지 클리어 후 다음 level의 storyScreen을 먼저 보여줍니다.
+            // level 4가 되면 전투가 아니라 엔딩 시나리오가 출력됩니다.
             level++;
-            screenMove("storyScreen");
+            showStoryScreen();
 
         }
         else if (isRunning) {
@@ -280,14 +287,12 @@ const initAnimation = () => {
     originbarspeed = bar.speed;
 };
 
+//hitbox 계산 책임만 Character로 이동
+// 보스 공격 피격 판정은 캐릭터 표시 영역과 같은 hitbox를 사용합니다.
+// 기존 호출부를 유지하기 위해 game.js 함수는 남기고 Character에 계산을 위임합니다.
 const getCharacterHitBox = () => {
-    return {
-        x: bar.x + (bar.width - 100) / 2,
-        y: bar.y + 10,
-        width: 100,
-        height: 150
-    };
-};  
+    return bar.character.getHitBox();
+};
 
 const getReflectShield = () => {
     const character = getCharacterHitBox();
@@ -420,6 +425,11 @@ const handleBallBarCollision = (b, effects) => {
     if (!hitBar) return;
 
     b.dy = -Math.abs(b.dy);
+
+    if (bar && bar.character) {
+        // 공 충돌 판정식은 그대로 두고, 성공한 순간에만 캐릭터 attack 모션을 연결합니다.
+        bar.character.startAttack();
+    }
 
     // 관통 공 스킬이 준비되어 있으면
     // 처음 바에 튕긴 공 위치에서 관통 공 2개 발사
@@ -715,7 +725,8 @@ const animate = () => {
     else if (bossPhase === "attacking") {
     // 보스 패턴 중: 공/블럭/바 숨김, 캐릭터만 보임
         updateBossProjectiles();
-        updateCharacterOnly();
+        // 보스 공격 중에는 공/블럭은 숨기고, Bar가 가진 Character만 계속 이동/출력합니다.
+        bar.update(false);
         checkBossAttackEnd();
     }
     else if (bossPhase === "returnPause") {
@@ -738,34 +749,14 @@ const drawNormalGame = (moveBall, showBar = true) => {
         drawBalls();
     }
 
-    if (showBar) {
-        bar.update();
-    } else {
-        updateCharacterOnly();
-    }
+    // updateCharacterOnly를 따로 두지 않고, showBar 값에 따라 Bar 객체가 bar 표시 여부를 직접 처리합니다.
+    bar.update(showBar);
 
     bricks.forEach((brick) => {
         brick.draw();
     });
 
     drawChainLightningEffects();
-};
-const updateCharacterOnly = () => {
-    if (rightPressed && bar.x < canvasWidth - bar.width) {
-        bar.x += bar.speed;
-    } else if (leftPressed && bar.x > 0) {
-        bar.x -= bar.speed;
-    }
-
-    context.beginPath();
-    context.drawImage(
-        characterImg,
-        bar.x + (bar.width - 100) / 2,
-        bar.y + 10,
-        100,
-        150
-        );
-    context.closePath();
 };
 
 const drawBossWarning = () => {

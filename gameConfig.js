@@ -76,6 +76,157 @@ class Ball {
     }
 }
 
+//Character클래스
+// 캐릭터 이미지, 애니메이션 상태, 보스 공격 피격 hitbox를 담당합니다.
+// 공과 bar 충돌 판정은 기존 Bar 값을 그대로 쓰고, 캐릭터는 화면 표시와 보스 피격 기준만 맡습니다.
+class Character {
+    constructor(ownerBar, characterId = characterNum) {
+        // Bar 위치를 기준으로 캐릭터 위치를 계산해야 해서 Bar 인스턴스를 참조합니다.
+        this.ownerBar = ownerBar;
+        this.characterId = characterId;
+
+        this.state = "idle";
+        this.frameIndex = 0;
+        this.frameTimer = 0;
+        this.frameDelay = 5;
+
+        this.width = 100;
+        this.height = 150;
+        this.animations = {};
+
+        this.loadConfig(characterId);
+
+        this.isAttackLocked = false;
+        this.attackTimer = 0;
+        this.attackDuration = this.frameDelay*this.animations["attack"].length;
+    }
+
+    startAttack() {
+        // 공이 bar에 닿았을 때 attack 모션이 바로 idle/move로 덮이지 않게 잠깐 잠급니다.
+        this.setState("attack");
+        this.isAttackLocked = true;
+        this.attackTimer = this.attackDuration;
+    }
+
+    updateAttackTimer() {
+        if (!this.isAttackLocked) return;
+
+        this.attackTimer--;
+
+        if (this.attackTimer <= 0) {
+            this.isAttackLocked = false;
+        }
+    }
+
+    loadConfig(characterId) {
+        // 선택한 캐릭터 번호에 맞는 이미지 경로를 Image 객체 배열로 바꿉니다.
+        // 없는 캐릭터 번호가 들어오면 1번 캐릭터 설정을 사용해 게임이 멈추지 않게 합니다.
+        const config = characterAnimationConfig[characterId] || characterAnimationConfig[1];
+
+        this.characterId = characterId;
+        this.width = config.width;
+        this.height = config.height;
+        this.animations = {};
+
+        Object.keys(config.animations).forEach((state) => {
+            this.animations[state] = config.animations[state].map(createImage);
+        });
+
+        this.state = "idle";
+        this.frameIndex = 0;
+        this.frameTimer = 0;
+    }
+
+    setCharacter(characterId) {
+        // 설정 화면에서 캐릭터를 바꿨을 때 현재 Bar가 가진 Character 설정도 함께 교체합니다.
+        this.loadConfig(characterId);
+    }
+
+    setState(state) {
+        // 상태가 바뀔 때 프레임을 처음부터 재생해야 idle/move/attack 전환이 자연스럽습니다.
+        if (this.state === state) return;
+
+        this.state = state;
+        this.frameIndex = 0;
+        this.frameTimer = 0;
+    }
+
+    getFramesByState(state) {
+        // 선택한 상태 이미지가 없으면 idle을 대신 사용해 캐릭터 이미지 누락에도 안전하게 동작합니다.
+        const frames = this.animations[state];
+
+        if (frames && frames.length > 0) {
+            return frames;
+        }
+
+        return this.animations.idle || [];
+    }
+
+    updateFrame() {
+        // requestAnimationFrame 루프가 돌 때마다 타이머를 올려 일정 간격으로 프레임을 바꿉니다.
+        const frames = this.getFramesByState(this.state);
+
+        if (!frames || frames.length <= 1) return;
+
+        this.frameTimer++;
+
+        if (this.frameTimer >= this.frameDelay) {
+            this.frameTimer = 0;
+            this.frameIndex = (this.frameIndex + 1) % frames.length;
+        }
+    }
+
+    getCurrentFrame() {
+        // 아직 로딩 중이거나 실패한 이미지는 그리지 않고 fallback으로 넘깁니다.
+        const frames = this.getFramesByState(this.state);
+
+        if (!frames || frames.length === 0) {
+            return null;
+        }
+
+        const frame = frames[this.frameIndex % frames.length];
+
+        if (!frame || frame.failed || !frame.complete) {
+            return null;
+        }
+
+        return frame;
+    }
+
+    getHitBox() {
+        // 캐릭터 표시 위치와 보스 공격 피격 판정을 같은 사각형으로 맞춥니다.
+        return {
+            x: this.ownerBar.x + (this.ownerBar.width - this.width) / 2,
+            y: this.ownerBar.y + this.ownerBar.height,
+            width: this.width,
+            height: this.height
+        };
+    }
+
+    draw() {
+        // 캐릭터 출력은 항상 이 메서드에서 처리해 평상시와 보스 공격 구간의 표시 방식을 통일합니다.
+        this.updateAttackTimer();
+        this.updateFrame();
+
+        const frame = this.getCurrentFrame();
+        const rect = this.getHitBox();
+
+        if (frame) {
+            context.beginPath();
+            context.drawImage(frame, rect.x, rect.y, rect.width, rect.height);
+            context.closePath();
+        }
+        else{
+            // 이미지 로딩 실패 시 플레이어 위치를 보여주기 위한 fallback
+            context.beginPath();
+            context.rect(rect.x, rect.y, rect.width, rect.height);
+            context.fillStyle = "#0095DD";
+            context.fill();
+            context.closePath();
+        }
+    }
+}
+
 class Bar {
     constructor() {
         this.width = 150;
@@ -84,30 +235,47 @@ class Bar {
         
         this.x = (canvasWidth - this.width) / 2;
         this.y = canvasHeight - this.height - 10 - 160;
+
+        // Bar가 Character를 소유하게 해서 캐릭터 출력과 hitbox 계산을 한곳에서 관리합니다.
+        this.character = new Character(this, characterNum);
     }
 
-    draw() {
+    drawDefaultBar() {
+        // 이미지가 없거나 fallback이 필요할 때 기존 bar 형태로 계속 플레이할 수 있게 합니다.
         context.beginPath();
         context.rect(this.x, this.y, this.width, this.height);
         context.fillStyle = "#0095DD";
         context.fill();
         context.closePath();
-
-        //캐릭터
-        context.beginPath();
-        context.drawImage(characterImg, this.x+(this.width-100)/2, this.y+10, 100, 150);
-        context.closePath();
     }
 
-    update() {
-        if (rightPressed && this.x < canvasWidth - this.width) {
-            this.x += this.speed;
-        } else if (leftPressed && this.x > 0) {
-            this.x -= this.speed;
+    draw(showDefaultBar = true) {
+        // showDefaultBar가 false면 보스 공격 구간에서 bar 사각형은 숨기고 캐릭터만 보여줍니다.
+        if(showDefaultBar){
+            this.drawDefaultBar();
         }
-
-        this.draw();
+        
+        this.character.draw();
     }
+
+    // 이동 입력은 기존 Bar 이동 로직을 유지하고, 이동 결과에 따라 캐릭터 상태만 바꿉니다.
+    update(showDefaultBar = true) {
+    let nextCharacterState = "idle";
+
+    if (rightPressed && this.x < canvasWidth - this.width) {
+        this.x += this.speed;
+        nextCharacterState = "moveRight";
+    } else if (leftPressed && this.x > 0) {
+        this.x -= this.speed;
+        nextCharacterState = "moveLeft";
+    }
+
+    if (!this.character.isAttackLocked) {
+        this.character.setState(nextCharacterState);
+    }
+
+    this.draw(showDefaultBar);
+}
 }
 
 class Brick {

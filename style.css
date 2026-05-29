@@ -257,3 +257,20 @@ section > div {
     border-color: #00ffff;
     background: rgba(0, 180, 255, 0.45);
 }
+
+/* storyData의 배경 이미지가 없거나 로딩에 실패해도 기본 배경으로 화면이 유지됩니다. */
+#storyScreen {
+    background-size: cover;
+    background-position: center;
+    background-color: #fff;
+}
+
+#storyPanel {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 40px;
+    color: white;
+}
+
+#storyContent {
+    white-space: pre-line;
+}
