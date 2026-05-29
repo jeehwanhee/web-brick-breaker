@@ -10,6 +10,7 @@ class Ball {
         this.dy = dy;
         this.radius = 10;
         this.color = color;
+        this.isDead = false;
     }
 
     draw() {
@@ -24,31 +25,36 @@ class Ball {
         if (this.x < this.radius || this.x > canvasWidth - this.radius) {
             this.dx = -this.dx;
         }
+
         if (this.y < this.radius) {
             this.dy = -this.dy;
         }
 
-        //바에 부딪혔을 때
-        if ((this.y + this.radius > bar.y && this.y - this.radius < bar.y + 10) && (this.x - this.radius >= bar.x && this.x + this.radius <= bar.x + bar.width)) {
-        	this.dy = -Math.abs(this.dy);
+        // 바에 부딪혔을 때
+        if (
+            (this.y + this.radius > bar.y && this.y - this.radius < bar.y + 10) &&
+            (this.x - this.radius >= bar.x && this.x + this.radius <= bar.x + bar.width)
+        ) {
+            this.dy = -Math.abs(this.dy);
         }
 
-        //바닥에 닿았을 때
+        // 바닥에 닿았을 때
         if (this.y > canvasHeight - this.radius) {
-        	count -= 1;
-        	updateUi();
-        	initAnimation();
+            this.isDead = true;
+            return;
         }
 
-        //벽돌에 부딪혔을 때
+        // 벽돌에 부딪혔을 때
         bricks.forEach((brick) => {
             let flag = false;
+
             if (this.y + this.radius > brick.y && this.y - this.radius < brick.y + brick.height) {
                 if (this.x > brick.x && this.x < brick.x + brick.width) {
                     this.dy = -this.dy;
                     flag = true;
                 }
             }
+
             if (this.x + this.radius > brick.x && this.x - this.radius < brick.x + brick.width) {
                 if (this.y > brick.y && this.y < brick.y + brick.height) {
                     this.dx = -this.dx;
@@ -56,14 +62,10 @@ class Ball {
                 }
             }
 
-            //부딪힌 벽돌 로직
-            if(flag) {
+            if (flag) {
                 brickHit(brick);
             }
         });
-
-
-
 
         this.x += this.dx;
         this.y += this.dy;
@@ -211,7 +213,7 @@ const level3Setting = () => {
     totLife = 100;
     count = 5;
     power = 20;
-    totBossLife = 100;
+    totBossLife = 500;
 }
 
 let bricks = [];
@@ -277,11 +279,11 @@ const level3Bricks = () => {
 
     const x = [
         10, 130,      370,                850, 970,
-                 250,                730,     
-            130,                          850,
-                 250,      490,      730,     
-            130, 250,           610,      850,
-                      425     
+        250,                730,     
+        130,                          850,
+        250,      490,      730,     
+        130, 250,           610,      850,
+        425     
     ];
     const y = [
         20, 20, 20, 20, 20,
@@ -414,51 +416,57 @@ const bossPatternConfigs = {
             type: "shockwave",
             imageSrc: "img/bossSkill/ganon_shockwave.png",
 
-        // 나방 먼지보다 적고, 넓게 퍼지게
             count: 5,
             radius: 24,
             speed: 5,
 
-        // 보스 체력 50% 이상 / 미만 데미지
+    // 쇼크웨이브 묶음을 몇 번 날릴지
+            waveCount: 2,
+
+    // 다음 쇼크웨이브 묶음까지의 시간
+            waveInterval: 900,
+
             damage: 12,
             enragedDamage: 20
         },
         {
             id: "ganon_fire",
-            name: "파이어볼 장판",
+            name: "추적 파이어볼 장판",
             type: "fireZone",
             imageSrc: "img/bossSkill/ganon_fire.png",
 
-    count: 3,              // 여러 개 생성
-    gap: 300,              // 파이어볼 사이 간격
+            count: 3,
 
-    warningTime: 2000,     // 2초 경고
-    activeTime: 1200,
-    damageInterval: 300,
+    // 몇 초 간격으로 다음 경고를 만들지
+            spawnInterval: 1200,
 
-    width: 120,
-    height: 120,
+            warningTime: 1500,
+            activeTime: 1000,
+            damageInterval: 300,
 
-    damage: 4,
-    enragedDamage: 7
-},
-{
-    id: "ganon_trident",
-    name: "삼지창 집중 공격",
-    type: "tridentConverge",
+            width: 120,
+            height: 120,
 
-    imageSrcLeft: "img/bossSkill/ganon_trident_left.png",
-    imageSrcCenter: "img/bossSkill/ganon_trident_center.png",
-    imageSrcRight: "img/bossSkill/ganon_trident_right.png",
+            damage: 4,
+            enragedDamage: 7
+        },
+        {
+            id: "ganon_trident",
+            name: "삼지창 집중 공격",
+            type: "tridentConverge",
 
-    width: 45,
-    height: 100,
-    speed: 7,
+            imageSrcLeft: "img/bossSkill/ganon_trident_left.png",
+            imageSrcCenter: "img/bossSkill/ganon_trident_center.png",
+            imageSrcRight: "img/bossSkill/ganon_trident_right.png",
 
-    damage: 16,
-    enragedDamage: 25
-}
-]
+            width: 45,
+            height: 100,
+            speed: 7,
+
+            damage: 16,
+            enragedDamage: 25
+        }
+    ]
 };
 
 const bossDie = () => {
