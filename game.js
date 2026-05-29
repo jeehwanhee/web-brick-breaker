@@ -1252,6 +1252,17 @@ const updateHomingProjectile = (projectile, speedScale = 1) => {
 };
 
 const createGanonShockwave = (pattern) => {
+    const waveCount = pattern.waveCount || 2;
+    const waveInterval = pattern.waveInterval || 900;
+
+    for (let wave = 0; wave < waveCount; wave++) {
+        scheduleBossSpawn(wave * waveInterval, () => {
+            createOneGanonShockwave(pattern);
+        });
+    }
+};
+
+const createOneGanonShockwave = (pattern) => {
     const startX = canvasWidth / 2;
     const startY = 90;
     const damage = getBossPatternDamage(pattern);
@@ -1259,8 +1270,7 @@ const createGanonShockwave = (pattern) => {
     for (let i = 0; i < pattern.count; i++) {
         const ratio = pattern.count === 1 ? 0.5 : i / (pattern.count - 1);
 
-        // 0.08π ~ 0.92π
-        // 넓게 퍼져서 사이에 피할 공간이 생김
+        // 넓게 퍼지는 각도
         const angle = Math.PI * (0.08 + 0.84 * ratio);
 
         bossProjectiles.push({
@@ -1280,38 +1290,40 @@ const createFireZone = (pattern) => {
     const damage = getBossPatternDamage(pattern);
 
     const count = pattern.count || 3;
-    const gap = pattern.gap || 300;
-
-    const centerX = bar.x + bar.width / 2;
-    const fireY = bar.y + bar.height / 2 - pattern.height / 2;
-
-    const startOffset = -gap * Math.floor(count / 2);
+    const spawnInterval = pattern.spawnInterval || 1200;
 
     for (let i = 0; i < count; i++) {
-        let fireX = centerX - pattern.width / 2 + startOffset + i * gap;
+        scheduleBossSpawn(i * spawnInterval, () => {
+            const centerX = bar.x + bar.width / 2;
+            const centerY = bar.y + bar.height / 2;
 
-        // 화면 밖으로 안 나가게 보정
-        fireX = Math.max(0, Math.min(fireX, canvasWidth - pattern.width));
+            let fireX = centerX - pattern.width / 2;
+            let fireY = centerY - pattern.height / 2;
 
-        bossProjectiles.push({
-            kind: "fire",
+            // 화면 밖으로 안 나가게 보정
+            fireX = Math.max(0, Math.min(fireX, canvasWidth - pattern.width));
+            fireY = Math.max(0, Math.min(fireY, canvasHeight - pattern.height));
 
-            x: fireX,
-            y: fireY,
+            bossProjectiles.push({
+                kind: "fire",
 
-            width: pattern.width,
-            height: pattern.height,
+                x: fireX,
+                y: fireY,
 
-            damage: damage,
-            damageInterval: pattern.damageInterval,
+                width: pattern.width,
+                height: pattern.height,
 
-            warningTime: pattern.warningTime,
-            activeTime: pattern.activeTime,
-            createdAt: Date.now(),
-            lastDamageTime: 0,
+                damage: damage,
+                damageInterval: pattern.damageInterval,
 
-            imageSrc: pattern.imageSrc,
-            hit: false
+                warningTime: pattern.warningTime,
+                activeTime: pattern.activeTime,
+                createdAt: Date.now(),
+                lastDamageTime: 0,
+
+                imageSrc: pattern.imageSrc,
+                hit: false
+            });
         });
     }
 };
