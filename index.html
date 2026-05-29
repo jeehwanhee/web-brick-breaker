@@ -31,8 +31,13 @@
 			<div class="mainBtn">게임 시작</div>
 			<div class="backBtn subBtn1">뒤로가기</div>
 		</div>
+		<!-- level별 storyData를 출력하는 시나리오 화면입니다. -->
 		<div id="storyScreen">
-			<div id="gameButton" class="subBtn1">넘기기</div>
+			<div id="storyPanel">
+		        <h2 id="storyTitle"></h2>
+		        <p id="storyContent"></p>
+		        <div id="gameButton" class="subBtn1"></div>
+		    </div>
 		</div>
 		<div id="boostScreen">
 			<p class="text1">스킬을 선택해주세요!</p>
@@ -64,8 +69,9 @@
 		</div>
 		<div id="settingScreen">
 			<div>
+				<!-- 캐릭터 선택 미리보기입니다. 선택값은 main.js의 characterNum에 저장됩니다. -->
 				<div id="prevCharButton" class="subBtn1"><</div>
-				<img id="characterImg" src="img/character/1.png" alt="캐릭터이미지">
+				<img id="characterImg" src="img/character/character1/preview.png" alt="캐릭터이미지">
 				<div id="nextCharButton" class="subBtn1">></div>
 			</div>
 			<div>
