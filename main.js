@@ -111,6 +111,33 @@ window.addEventListener("load", () => {
 
 });
 
+function updateStageScorePanel() {
+    const stageScorePanel = document.querySelector("#stageScorePanel");
+    const scoreBreakdown = document.querySelector("#scoreBreakdown");
+
+    if (!stageScorePanel || !scoreBreakdown) return;
+
+    if (typeof lastStageScoreResult === "undefined" || lastStageScoreResult === null) {
+        stageScorePanel.classList.add("hide");
+        scoreBreakdown.innerText = "";
+        return;
+    }
+
+    const result = lastStageScoreResult;
+
+    stageScorePanel.classList.remove("hide");
+    scoreBreakdown.innerText =
+        `클리어 스테이지 : ${result.clearedLevel}\n` +
+        `보스 처치 점수 : +${result.bossScore}\n` +
+        `남은 체력 점수 : +${result.lifeScore}\n` +
+        `남은 탄창 점수 : +${result.ammoScore}\n` +
+        `노데미지 클리어 : +${result.noDamageScore}\n` +
+        `시간 패널티 : -${result.timePenalty} (${result.elapsedSeconds}초)\n` +
+        `이번 정산 점수 : ${result.bonusTotal >= 0 ? "+" : ""}${result.bonusTotal}\n` +
+        `현재 총점 : ${result.totalScore}`;
+}
+
+
 // 현재 level에 맞는 시나리오를 storyScreen에 출력합니다.
 // 화면 전환은 기존 screenMove 함수를 그대로 사용해 다른 화면 로직과 섞이지 않게 합니다.
 function showStoryScreen() {
@@ -124,7 +151,7 @@ function showStoryScreen() {
     storyTitle.innerText = story.title;
     storyContent.innerText = story.content;
     storyButton.innerText = story.buttonText;
-
+    updateStageScorePanel();
     storyScreen.style.backgroundImage = `url(${story.background})`;
 
     screenMove("storyScreen");
@@ -195,6 +222,10 @@ const initScreenSetting = () => {
 	startGameButton.addEventListener("click", () => {
 		level = 1;
 		skills = [];
+
+        if (typeof resetScoreSystem === "function") {
+            resetScoreSystem();
+        }
 		const levelButtons = startGameScreen.querySelectorAll("#selectLevel > div");
 		
 		const img = startGameScreen.querySelector("#levelImg");
@@ -427,7 +458,7 @@ const SettingScreenSetting = () => {
 const skillList = [
     "베리어 생성",
     "산탄공",
-    "시간 느려지기",
+    "시간감속",
     "유체화",
     "관통 공",
     "연쇄 번개",
@@ -438,7 +469,7 @@ const skillList = [
 const skillDescription = {
     "베리어 생성": "1초 동안 아래에 베리어를 생성하여 공이 나가는 것을 막습니다.",
     "산탄공": "스킬 사용 후, 처음 공이 바에 튕길 시 공 5개가 추가됩니다.",
-    "시간 느려지기": "3초 동안 모든 투사체의 속도가 느려집니다.",
+    "시간감속": "3초 동안 모든 투사체의 속도가 느려집니다.",
     "유체화": "3초 동안 바의 이동속도가 증가합니다.",
     "관통 공": "스킬 사용 후, 처음 공이 바에 튕길 시 블록과 바를 관통하는 공 2개를 발사합니다.",
     "연쇄 번개": "스킬 사용 후, 처음 공이 블럭을 타격할 때 주변 블록을 공격하는 번개가 내립니다.",

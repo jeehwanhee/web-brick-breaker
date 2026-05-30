@@ -96,6 +96,7 @@ class Character {
         this.width = 100;
         this.height = 150;
         this.animations = {};
+        this.previewImage = null;
 
         this.loadConfig(characterId);
 
@@ -130,6 +131,7 @@ class Character {
         this.width = config.width;
         this.height = config.height;
         this.animations = {};
+        this.previewImage = createImage(config.preview);
 
         Object.keys(config.animations).forEach((state) => {
             this.animations[state] = config.animations[state].map(createImage);
@@ -219,8 +221,17 @@ class Character {
             context.drawImage(frame, rect.x, rect.y, rect.width, rect.height);
             context.closePath();
         }
-        else{
-            // 이미지 로딩 실패 시 플레이어 위치를 보여주기 위한 fallback
+        else if (
+            this.previewImage &&
+            !this.previewImage.failed &&
+            this.previewImage.complete &&
+            this.previewImage.naturalWidth > 0
+        ) {
+            context.beginPath();
+            context.drawImage(this.previewImage, rect.x, rect.y, rect.width, rect.height);
+            context.closePath();
+        }
+        else {
             context.beginPath();
             context.rect(rect.x, rect.y, rect.width, rect.height);
             context.fillStyle = "#0095DD";
@@ -291,7 +302,6 @@ class Brick {
         this.normalColor = this.color;
         this.hp = hp;
         this.totalHp = hp;
-
         this.isBurning = false;
         this.burnTimer = null;
 
@@ -348,6 +358,7 @@ const damageBrick = (brick, damage) => {
 
     if (brick.hp <= 0) {
         bossLife -= brick.totalHp;
+        addScore(brick.totalHp * SCORE_CONFIG.brickDestroyMultiplier);
         bricks = bricks.filter(b => b.hp > 0);
 
         if (brick.item != "") {
@@ -475,7 +486,7 @@ const level2Bricks = () => {
 
 const level3Bricks = () => {
     bricks = [];
-
+    
     const x = [
         10, 130,      370,                850, 970,
         250,                730,     
@@ -716,3 +727,23 @@ let skillStates = [
     { name: "", lastUsed: 0, activeUntil: 0, isActive: false },
     { name: "", lastUsed: 0, activeUntil: 0, isActive: false }
 ];
+
+const SCORE_CONFIG = {
+    brickDestroyMultiplier: 10,
+    reflectDamageMultiplier: 10,
+    bossClearBonus: {
+        1: 2000,
+        2: 3000,
+        3: 4000
+    },
+    remainingLifeMultiplier: 50,
+    remainingAmmoMultiplier: 300,
+    noDamageBonus: 1000,
+    timePenaltyPerSecond: 50
+};
+
+const battleBackgrounds = {
+    1: "img/background/stage1.png",
+    2: "img/background/stage2.png",
+    3: "img/background/stage3.png"
+};

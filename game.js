@@ -38,6 +38,13 @@ let bossLife;
 
 let winning = false;
 
+let score = 0;
+let stageStartTime = 0;
+let stageTookDamage = false;
+let lastStageScoreResult = null;
+let pausedAt = 0;
+let totalPausedTime = 0;
+
 const skillKeys = ["Q", "W", "E"];
 
 let bossSkillTimer = null;
@@ -130,10 +137,16 @@ window.addEventListener("load", () => {
         if (isRunning) {
             controlButton.innerText = "resume";
             isRunning = false;
+            pausedAt = Date.now();
         }
         else {
             controlButton.innerText = "pause";
             isRunning = true;
+            if (pausedAt !== 0) {
+                totalPausedTime += Date.now() - pausedAt;
+                pausedAt = 0;
+            }
+            startStageTimerIfNeeded();
             startGame();
         } 
     });
@@ -196,6 +209,7 @@ const initBoostScreen = () => {
             initScreen();
             initAnimation();
             screenMove("gameScreen");
+            drawReadyScreen();
         })
     }
     screenMove("boostScreen");
@@ -203,7 +217,7 @@ const initBoostScreen = () => {
 
 const initScreen = () => {
     //난이도 선택으로 결정되는 전역변수 등등
-    
+    resetStageRuntimeState();
     switch(level) {
     case 1:
         level1Setting();
@@ -218,11 +232,17 @@ const initScreen = () => {
         level3Bricks();
         break;
     }
+    updateBattleBackground();
+
     bossImgUpdate("init");
 
     life = totLife; 
     bossLife = totBossLife;
     winning = false;
+
+    resetStageScoreTracking();
+    updateScoreUi();
+
     const controlButton = document.querySelector("#controlButton");
     controlButton.innerText = "게임 시작";
 
@@ -268,9 +288,10 @@ const initScreen = () => {
 
 //캔버스 관련 초기 설정 (bricks는 initScreen() -> levelNBricks()에서 초기화)
 const initAnimation = () => {
-    resetBalls();
     bar = new Bar();
     originbarspeed = bar.speed;
+    resetBalls();
+    drawReadyScreen();
 };
 
 //hitbox 계산 책임만 Character로 이동
@@ -301,7 +322,18 @@ const createNewBall = (
 };
 
 const resetBalls = () => {
-    ball = createNewBall();
+    const spawnX = bar
+        ? bar.x + bar.width / 2
+        : canvasWidth / 2;
+
+    const spawnY = bar
+        ? bar.y - 10
+        : canvasHeight - 200;
+
+    const dx = Math.random() < 0.5 ? -4 : 4;
+    const dy = -4;
+
+    ball = createNewBall(spawnX, spawnY, dx, dy);
     balls = [ball];
 };
 
@@ -436,6 +468,51 @@ const handleBallBarCollision = (b, effects) => {
         deactivatePlayerSkill_shotball();
         deactivateSkillStateByName("산탄공");
     }
+};
+
+const resetStageRuntimeState = () => {
+    cancelAnimationFrame(animationId);
+
+    if (bossSkillTimer !== null) {
+        clearTimeout(bossSkillTimer);
+        bossSkillTimer = null;
+    }
+
+    if (bossWarningTimer !== null) {
+        clearTimeout(bossWarningTimer);
+        bossWarningTimer = null;
+    }
+
+    if (bossReturnTimer !== null) {
+        clearTimeout(bossReturnTimer);
+        bossReturnTimer = null;
+    }
+
+    bossPatternTimeouts.forEach((timer) => {
+        clearTimeout(timer);
+    });
+
+    bossPatternTimeouts = [];
+
+    isRunning = false;
+    bossPhase = "normal";
+    isBossAttacking = false;
+    currentBossPattern = null;
+    bossProjectiles = [];
+    chainLightningEffects = [];
+    pendingSpawns = 0;
+    spawningFinished = false;
+
+    isBarrieractive = false;
+    isPenetrationactive = false;
+    isShotballactive = false;
+    isTimeWarpActive = false;
+    isBurningBallActive = false;
+    isChainLightningActive = false;
+    isReflectActive = false;
+
+    rightPressed = false;
+    leftPressed = false;
 };
 
 const handleBallBottomCollision = (b, effects) => {
@@ -734,6 +811,24 @@ const animate = () => {
     animationId = requestAnimationFrame(animate);
 };
 
+const drawReadyScreen = () => {
+    if (!context || !canvasWidth || !canvasHeight) return;
+    if (!bar) return;
+
+    context.clearRect(0, 0, canvasWidth, canvasHeight);
+
+    // 새 스테이지의 공, 바, 캐릭터 표시
+    drawBalls();
+    bar.update(true);
+
+    // 새 스테이지의 벽돌 표시
+    bricks.forEach((brick) => {
+        brick.draw();
+    });
+
+    drawChainLightningEffects();
+};
+
 const drawNormalGame = (moveBall, showBar = true) => {
     if (moveBall) {
         updateBalls();
@@ -811,6 +906,7 @@ const drawReflectShield = () => {
     context.closePath();
     context.restore();
 };
+
 
 const startBossPattern = () => {
     if (bossSkillTimer !== null) return;
@@ -1041,7 +1137,7 @@ const updateBossProjectiles = () => {
                 ) {
                 if (now - projectile.lastDamageTime >= projectile.damageInterval) {
                     projectile.lastDamageTime = now;
-                    life -= projectile.damage;
+                    takeDamage(projectile.damage);
                     updateUi();
                 }
             }
@@ -1075,7 +1171,7 @@ const updateBossProjectiles = () => {
 
         if (!projectile.hit && isProjectileHitBar(projectile)) {
             projectile.hit = true;
-            life -= projectile.damage;
+            takeDamage(projectile.damage);
             updateUi();
         }
     });
@@ -1514,7 +1610,12 @@ const checkReflectedProjectileHitBoss = (projectile) => {
 
     // 화면 위쪽 보스 영역에 도달하면 보스에게 피해
     if (centerY <= 90) {
-        bossLife -= REFLECT_DAMAGE;
+        const actualDamage = Math.min(REFLECT_DAMAGE, Math.max(0, bossLife));
+
+        bossLife -= actualDamage;
+
+        addScore(actualDamage * SCORE_CONFIG.reflectDamageMultiplier);
+
         bossImgUpdate("attacked");
         updateUi();
 
@@ -1708,6 +1809,9 @@ const updateUi = () => {
 
         bossDie();
 
+        const clearedLevel = level;
+        calculateStageClearScore(clearedLevel);
+
         level++;
         showStoryScreen();
 
@@ -1869,4 +1973,92 @@ const deactivateSkillStateByName = (skillName) => {
 
     state.isActive = false;
     state.activeUntil = 0;
+};
+
+
+const updateScoreUi = () => {
+    const scoreText = document.querySelector("#score");
+    if (!scoreText) return;
+
+    scoreText.innerText = `점수 : ${score}`;
+};
+
+const addScore = (amount) => {
+    score += amount;
+    updateScoreUi();
+};
+
+const resetScoreSystem = () => {
+    score = 0;
+    lastStageScoreResult = null;
+    updateScoreUi();
+};
+
+const resetStageScoreTracking = () => {
+    stageStartTime = 0;
+    pausedAt = 0;
+    totalPausedTime = 0;
+    stageTookDamage = false;
+};
+
+
+const startStageTimerIfNeeded = () => {
+    if (stageStartTime === 0) {
+        stageStartTime = Date.now();
+    }
+};
+
+const takeDamage = (damage) => {
+    if (damage <= 0) return;
+
+    life -= damage;
+    stageTookDamage = true;
+    updateUi();
+};
+
+const calculateStageClearScore = (clearedLevel) => {
+    const now = Date.now();
+    
+    const currentPausedTime = pausedAt !== 0
+        ? now - pausedAt
+        : 0;
+
+    const elapsedSeconds = stageStartTime === 0
+        ? 0
+        : Math.floor((now - stageStartTime - totalPausedTime - currentPausedTime) / 1000);
+    
+    const bossScore = SCORE_CONFIG.bossClearBonus[clearedLevel] || 0;
+    const lifeScore = Math.max(0, life) * SCORE_CONFIG.remainingLifeMultiplier;
+    const ammoScore = Math.max(0, count) * SCORE_CONFIG.remainingAmmoMultiplier;
+    const noDamageScore = stageTookDamage ? 0 : SCORE_CONFIG.noDamageBonus;
+    const timePenalty = elapsedSeconds * SCORE_CONFIG.timePenaltyPerSecond;
+
+    const bonusTotal = bossScore + lifeScore + ammoScore + noDamageScore - timePenalty;
+
+    addScore(bonusTotal);
+
+    lastStageScoreResult = {
+        clearedLevel,
+        bossScore,
+        lifeScore,
+        ammoScore,
+        noDamageScore,
+        elapsedSeconds,
+        timePenalty,
+        bonusTotal,
+        totalScore: score
+    };
+
+    return lastStageScoreResult;
+};
+//배경 이미지 변경
+
+const updateBattleBackground = () => {
+    const battleArea = document.querySelector("#battleArea");
+    if (!battleArea) return;
+
+    const background = battleBackgrounds[level] || battleBackgrounds[1];
+
+    battleArea.style.backgroundImage =
+        `linear-gradient(rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.18)), url('${background}')`;
 };
