@@ -1,5 +1,7 @@
 //전역변수
 let level = 1;
+const storyDelay = 8000;
+let storyTimer = null;
 
 // level별 storyScreen 출력 데이터를 한곳에서 관리합니다.
 // 문구, 버튼 텍스트, 배경 이미지를 level 기준으로 쉽게 교체하기 위한 구조입니다.
@@ -7,19 +9,19 @@ const storyData = {
     1: {
         title: "초원의 그림자",
         content: "평화로운 초원에 수상한 기운이 퍼지기 시작했다.\n왕자는 성에 갇힌 공주를 구하기 위해 첫 번째 괴물 나방과 맞선다.",
-        buttonText: "전투 시작",
+        buttonText: "넘기기",
         background: "img/background/stage1.png"
     },
     2: {
         title: "어둠의 성",
         content: "초원을 지나 성에 도착한 왕자.\n성 안에는 번개를 다루는 마법사 아그님이 기다리고 있었다.",
-        buttonText: "전투 시작",
+        buttonText: "넘기기",
         background: "img/background/stage2.png"
     },
     3: {
         title: "최후의 방",
         content: "모든 길의 끝에서 왕자는 가논과 마주한다.\n공주를 구하기 위한 마지막 전투가 시작된다.",
-        buttonText: "전투 시작",
+        buttonText: "넘기기",
         background: "img/background/stage3.png"
     },
     4: {
@@ -60,6 +62,31 @@ function showStoryScreen() {
     storyScreen.style.backgroundImage = `url(${story.background})`;
 
     screenMove("storyScreen");
+
+	if (storyTimer !== null) {
+		clearTimeout(storyTimer);
+		storyTimer = null;
+	}
+
+	if (level !== 4) {
+		storyTimer = setTimeout(() => {
+			storyTimer = null;
+			advanceFromStoryScreen();
+		}, storyDelay);
+	}
+}
+
+function advanceFromStoryScreen() {
+    if (storyTimer !== null) {
+        clearTimeout(storyTimer);
+        storyTimer = null;
+    }
+
+    if (level == 4) {
+        screenMove("initScreen");
+        return;
+    }
+    initBoostScreen();
 }
 
 //화면 이동 함수

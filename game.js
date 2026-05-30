@@ -96,12 +96,7 @@ window.addEventListener("load", () => {
     
     const gameButton = document.querySelector("#gameButton");
     gameButton.addEventListener("click", () => {
-        // level 4는 엔딩 storyScreen이므로 전투/증강 화면으로 가지 않고 홈으로 돌아갑니다.
-        if(level==4){
-            screenMove("initScreen");
-            return;
-        }
-        initBoostScreen();
+        advanceFromStoryScreen();
     });
 
 
@@ -131,25 +126,16 @@ window.addEventListener("load", () => {
     const controlButton = document.querySelector("#controlButton");
 
     controlButton.addEventListener("click", () => {
-        if (winning) {
-            controlButton.innerText = "pause";
-            winning = false;
-
-            // 스테이지 클리어 후 다음 level의 storyScreen을 먼저 보여줍니다.
-            // level 4가 되면 전투가 아니라 엔딩 시나리오가 출력됩니다.
-            level++;
-            showStoryScreen();
-
+        
+        if (isRunning) {
+            controlButton.innerText = "resume";
+            isRunning = false;
         }
-        else if (isRunning) {
-          controlButton.innerText = "resume";
-          isRunning = false;
-      }
-      else {
-          controlButton.innerText = "pause";
-          isRunning = true;
-          startGame();
-      }
+        else {
+            controlButton.innerText = "pause";
+            isRunning = true;
+            startGame();
+        } 
   });
 
     //스킬
@@ -417,6 +403,7 @@ const handleBallWallCollision = (b) => {
 
 const handleBallBarCollision = (b, effects) => {
     const hitBar =
+        b.dy > 0 &&
         b.y + b.radius > bar.y &&
         b.y - b.radius < bar.y + 10 &&
         b.x - b.radius >= bar.x &&
@@ -1713,16 +1700,16 @@ const updateUi = () => {
 
     if (bossLife <= 0) {
         //승리
-        winning = true;
         cancelAnimationFrame(animationId);
         isRunning = false;
         context.clearRect(0, 0, canvasWidth, canvasHeight);
 
         bossDie();
-        const controlButton = document.querySelector("#controlButton");
-        controlButton.innerText = "다음 스테이지 이동";
 
-        //캔버스 흐리게 하는 함수 호출
+        level++;
+        showStoryScreen();
+
+        
     }
 
     if (life <= 0 || count <= 0) {
