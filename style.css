@@ -105,7 +105,7 @@ section > div {
 }
 
 #canvas {
-	background: gray;
+	background: transparent;
     border: 1px dotted black;
 }
 
@@ -267,11 +267,494 @@ section > div {
 }
 
 #storyPanel {
+	display: flex;
+    flex-direction: column;
     background: rgba(0, 0, 0, 0.5);
     padding: 40px;
     color: white;
 }
 
+#storyPanel #gameButton {
+    align-self: flex-end;
+    margin: 28px 20px 0 auto;
+}
 #storyContent {
     white-space: pre-line;
+}
+
+
+#stageScorePanel {
+	align-self: center;
+    margin: 32px auto 0 auto;
+
+    padding: 20px 28px;
+    width: 520px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    border-radius: 12px;
+    color: white;
+    text-align: left;
+}
+
+#stageScorePanel h3 {
+    text-align: center;
+    margin-bottom: 12px;
+    font-size: 24px;
+}
+
+#scoreBreakdown {
+    white-space: pre-line;
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+#score {
+    font-weight: bold;
+    color: #ffd700;
+}
+
+/* ===============================
+   Zelda-like Fantasy UI Theme
+   =============================== */
+
+:root {
+    --ui-dark: #1f2418;
+    --ui-deep: #10140c;
+    --ui-green: #2f5d3a;
+    --ui-green-light: #6fa45a;
+    --ui-gold: #d8b45a;
+    --ui-gold-light: #ffe39a;
+    --ui-brown: #5a3b1e;
+    --ui-paper: #f4e3b2;
+    --ui-red: #b83a2d;
+    --ui-blue: #3f8fcf;
+    --ui-shadow: rgba(0, 0, 0, 0.55);
+}
+
+body {
+    background-color: #12200f;
+    background-image:
+        radial-gradient(circle at top, rgba(255, 227, 154, 0.16), transparent 34%),
+        url('img/background/basic.png');
+    background-size: cover;
+    background-attachment: fixed;
+    color: var(--ui-paper);
+}
+
+
+/* 각 화면 공통 프레임 */
+section > div:not(#initScreen) {
+    background:
+        linear-gradient(rgba(16, 20, 12, 0.78), rgba(16, 20, 12, 0.9)),
+        url('img/background/basic.png');
+    background-size: cover;
+    border: 6px solid var(--ui-brown);
+    box-shadow:
+        0 0 0 4px var(--ui-gold),
+        0 18px 40px var(--ui-shadow);
+    box-sizing: border-box;
+}
+
+/* 메인 화면 카드 */
+#initScreen > div {
+    border: 6px solid var(--ui-brown);
+    box-shadow:
+        0 0 0 4px var(--ui-gold),
+        inset 0 0 40px rgba(0, 0, 0, 0.5),
+        0 18px 40px var(--ui-shadow);
+    border-radius: 18px;
+}
+
+/* 제목 */
+.title {
+    color: var(--ui-gold-light);
+    text-shadow:
+        3px 3px 0 #000,
+        0 0 12px rgba(255, 227, 154, 0.65);
+    letter-spacing: -2px;
+}
+
+/* 큰 텍스트 */
+.text1 {
+    color: var(--ui-gold-light);
+    text-shadow: 2px 2px 0 #000;
+}
+
+/* 일반 정보 텍스트 */
+.text2 {
+    color: var(--ui-paper);
+    text-shadow: 1px 1px 0 #000;
+}
+
+/* 버튼 공통 */
+.mainBtn,
+.subBtn1 {
+    color: var(--ui-gold-light);
+    background:
+        linear-gradient(#3f6f43, #1f3f28);
+    border: 3px solid var(--ui-gold);
+    border-radius: 10px;
+    box-shadow:
+        inset 0 0 0 2px rgba(255, 255, 255, 0.12),
+        0 5px 0 #2b1b0c,
+        0 8px 16px rgba(0, 0, 0, 0.35);
+    font-weight: bold;
+    text-shadow: 2px 2px 0 #000;
+    transition:
+        transform 0.08s ease,
+        box-shadow 0.08s ease,
+        filter 0.15s ease;
+}
+
+.mainBtn:hover,
+.subBtn1:hover {
+    filter: brightness(1.15);
+    transform: translateY(-2px);
+}
+
+.mainBtn:active,
+.subBtn1:active {
+    transform: translateY(3px);
+    box-shadow:
+        inset 0 0 0 2px rgba(255, 255, 255, 0.08),
+        0 2px 0 #2b1b0c,
+        0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* 선택된 스테이지 */
+.selected {
+    color: var(--ui-gold-light);
+    background:
+        linear-gradient(#8a6a24, #4f3514) !important;
+    border-color: var(--ui-gold-light);
+    text-shadow: 2px 2px 0 #000;
+}
+
+#selectLevel > div {
+    background:
+        linear-gradient(rgba(47, 93, 58, 0.9), rgba(20, 38, 23, 0.95));
+    border: 2px solid var(--ui-gold);
+    border-radius: 10px;
+}
+
+/* 보스 상단 패널 */
+#bossTopArea {
+    background:
+        linear-gradient(rgba(244, 227, 178, 0.92), rgba(194, 156, 82, 0.86));
+    border-bottom: 5px solid var(--ui-brown);
+    box-shadow: inset 0 -12px 24px rgba(0, 0, 0, 0.22);
+}
+
+/* 보스 정보 */
+#bossInfo {
+    left: 24px;
+    background: rgba(16, 20, 12, 0.78);
+    border: 3px solid var(--ui-gold);
+    border-radius: 12px;
+    padding: 14px 18px;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+#bossInfo #level,
+#bossInfo #bossLife {
+    color: var(--ui-gold-light);
+    text-shadow: 2px 2px 0 #000;
+}
+
+/* 보스 이미지 */
+#bossImg {
+    filter:
+        drop-shadow(0 8px 0 rgba(0, 0, 0, 0.35))
+        drop-shadow(0 0 12px rgba(255, 227, 154, 0.25));
+}
+
+/* 게임 캔버스 */
+#canvas {
+    background:
+        linear-gradient(rgba(80, 100, 86, 0.4), rgba(40, 52, 43, 0.4)),
+        #5f6b5f;
+    border-top: 6px solid var(--ui-brown);
+	border-bottom: 6px solid var(--ui-brown);
+    box-shadow:
+        0 0 0 4px var(--ui-gold),
+        inset 0 0 45px rgba(0, 0, 0, 0.35);
+    box-sizing: border-box;
+}
+/* 하단 UI */
+#userInterface {
+    width: 100%;
+    min-height: 120px;
+    padding: 14px 22px;
+    box-sizing: border-box;
+    background:
+        linear-gradient(#20160d, #100b06);
+    border-top: 5px solid var(--ui-gold);
+    box-shadow: inset 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+#userInterface > div:first-child {
+    background: rgba(244, 227, 178, 0.1);
+    border: 2px solid rgba(216, 180, 90, 0.75);
+    border-radius: 12px;
+    padding: 10px 16px;
+    min-width: 220px;
+}
+
+/* 체력/탄창/점수 */
+#life,
+#count,
+#score {
+    font-weight: bold;
+    color: var(--ui-paper);
+}
+
+#score {
+    color: var(--ui-gold-light);
+}
+
+/* 스킬 영역 */
+#skills {
+    width: auto;
+    gap: 12px;
+}
+
+/* 스킬 박스 */
+.skillBox {
+    min-width: 132px;
+    padding: 10px 12px;
+    border: 3px solid var(--ui-gold);
+    border-radius: 14px;
+    background:
+        radial-gradient(circle at top, rgba(255, 227, 154, 0.18), transparent 45%),
+        linear-gradient(#253829, #10170f);
+    box-shadow:
+        inset 0 0 18px rgba(0, 0, 0, 0.55),
+        0 8px 14px rgba(0, 0, 0, 0.35);
+}
+
+.skillName {
+    color: var(--ui-gold-light);
+    text-shadow: 2px 2px 0 #000;
+}
+
+
+.skillKey {
+    color: white;
+    font-size: 22px;
+    text-shadow: 2px 2px 0 #000;
+}
+
+.skillCooldown {
+    color: var(--ui-paper);
+}
+
+/* 스킬 상태 */
+.skillReady {
+    border-color: var(--ui-gold);
+}
+
+.skillCooldownState {
+    opacity: 0.55;
+    filter: grayscale(0.55);
+    border-color: #6d6d6d;
+}
+
+.skillActiveState {
+    border-color: #7fffd4;
+    background:
+        radial-gradient(circle at top, rgba(127, 255, 212, 0.4), transparent 50%),
+        linear-gradient(#245a54, #10251f);
+    box-shadow:
+        0 0 18px rgba(127, 255, 212, 0.6),
+        inset 0 0 18px rgba(0, 0, 0, 0.45);
+}
+
+/* 증강 선택 화면 */
+#boostScreen {
+    background:
+        linear-gradient(rgba(16, 20, 12, 0.82), rgba(16, 20, 12, 0.92)),
+        url('img/background/basic.png');
+    background-size: cover;
+}
+
+
+.boost {
+    width: 240px;
+    min-height: 260px;
+    background:
+        radial-gradient(circle at top, rgba(255, 227, 154, 0.22), transparent 42%),
+        linear-gradient(#2c3d2b, #12190f);
+    border: 4px solid var(--ui-gold);
+    border-radius: 18px;
+    color: var(--ui-paper);
+    box-shadow:
+        0 0 0 3px var(--ui-brown),
+        0 12px 28px rgba(0, 0, 0, 0.45);
+    transition:
+        transform 0.12s ease,
+        filter 0.12s ease,
+        box-shadow 0.12s ease;
+}
+
+.boost:hover {
+    transform: translateY(-8px);
+    filter: brightness(1.12);
+    box-shadow:
+        0 0 0 3px var(--ui-gold-light),
+        0 18px 32px rgba(0, 0, 0, 0.55);
+}
+
+.boost .text1 {
+    font-size: 28px;
+    margin: 18px 0;
+}
+
+.boost .text2 {
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+/* 스토리 화면 */
+#storyScreen {
+    background-size: cover;
+    background-position: center;
+}
+
+#storyPanel {
+    margin-top: 180px;
+    width: 720px;
+    background:
+        linear-gradient(rgba(20, 16, 10, 0.86), rgba(8, 7, 5, 0.92));
+    border: 5px solid var(--ui-gold);
+    border-radius: 18px;
+    box-shadow:
+        0 0 0 4px var(--ui-brown),
+        0 18px 40px rgba(0, 0, 0, 0.6);
+}
+
+#storyTitle {
+    color: var(--ui-gold-light);
+    font-size: 38px;
+    text-align: center;
+    text-shadow: 3px 3px 0 #000;
+    margin-bottom: 24px;
+}
+
+#storyContent {
+    color: var(--ui-paper);
+    font-size: 21px;
+    line-height: 1.8;
+    text-align: center;
+    text-shadow: 2px 2px 0 #000;
+}
+
+/* 설정 화면 */
+#settingScreen > div {
+    background: rgba(16, 20, 12, 0.76);
+    border: 3px solid var(--ui-gold);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 24px;
+}
+
+/* 캐릭터/공 이미지 미리보기 */
+#characterImg,
+#ballImg,
+#levelImg {
+    filter:
+        drop-shadow(0 8px 0 rgba(0, 0, 0, 0.35))
+        drop-shadow(0 0 14px rgba(255, 227, 154, 0.24));
+}
+
+/* gameScreen 안의 버튼은 밖으로 튀어나가지 않게 별도 배치 */
+#gameScreen {
+    height: auto;
+    min-height: 1200px;
+    overflow: hidden;
+}
+
+/* 게임 화면 하단 버튼 간격 줄이기 */
+#gameScreen #controlButton,
+#gameScreen .backBtn {
+    margin: 10px auto;
+}
+
+/* start 버튼 */
+#gameScreen #controlButton {
+    width: 180px;
+    height: 46px;
+    line-height: 46px;
+}
+
+/* 종료하기 버튼 */
+#gameScreen .backBtn {
+    width: 180px;
+    height: 46px;
+    line-height: 46px;
+}
+
+#gameControlArea {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 28px;
+    padding: 14px 0 20px 0;
+    background:
+        linear-gradient(rgba(16, 20, 12, 0.88), rgba(8, 10, 6, 0.94));
+    box-sizing: border-box;
+}
+
+/* 보스 영역 + 플레이 영역을 하나의 배경으로 묶는 래퍼 */
+#battleArea {
+    width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+
+    border: 6px solid var(--ui-brown);
+    box-shadow:
+        0 0 0 4px var(--ui-gold),
+        inset 0 0 45px rgba(0, 0, 0, 0.25);
+}
+
+/* 보스 영역은 부모 배경이 보이게 투명 처리 */
+#bossTopArea {
+    background: transparent;
+    border-bottom: none;
+    margin: 0;
+}
+
+/* 캔버스도 부모 배경이 보이게 투명 처리 */
+#canvas {
+    display: block;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    margin: 0;
+}
+
+#bossTopArea {
+    position: relative;
+    background: transparent;
+    border-bottom: none;
+    box-shadow: none;
+    margin: 0;
+}
+
+#bossTopArea::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 100%;
+    height: 7px;
+    background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.7),
+    	rgba(255, 230, 150, 0.28)
+    );
+    pointer-events: none;
 }
