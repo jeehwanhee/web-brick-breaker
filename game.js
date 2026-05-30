@@ -109,18 +109,18 @@ window.addEventListener("load", () => {
 
     //바 좌우 움직임 관련 키 입력
     document.addEventListener("keydown", (e) => {
-       if (e.key === "Right" || e.key === "ArrowRight") 
-          rightPressed = true;
-      else if (e.key === "Left" || e.key === "ArrowLeft") 
-          leftPressed = true;
-  });
+     if (e.key === "Right" || e.key === "ArrowRight") 
+      rightPressed = true;
+  else if (e.key === "Left" || e.key === "ArrowLeft") 
+      leftPressed = true;
+});
 
     document.addEventListener("keyup", (e) => {
-       if (e.key === "Right" || e.key === "ArrowRight") 
-          rightPressed = false;
-      else if (e.key === "Left" || e.key === "ArrowLeft") 
-          leftPressed = false;
-  });
+     if (e.key === "Right" || e.key === "ArrowRight") 
+      rightPressed = false;
+  else if (e.key === "Left" || e.key === "ArrowLeft") 
+      leftPressed = false;
+});
 
     //게임시작 버튼 (처음 이후에는 pause, resume 역할)
     const controlButton = document.querySelector("#controlButton");
@@ -136,7 +136,7 @@ window.addEventListener("load", () => {
             isRunning = true;
             startGame();
         } 
-  });
+    });
 
     //스킬
     window.addEventListener('keydown', (event) => {
@@ -188,11 +188,11 @@ const initBoostScreen = () => {
         container.addEventListener("click", () => {
             skills.push(showSkills[i]);
             skillStates[skills.length - 1] = {
-            name: showSkills[i],
-            lastUsed: 0,
-            activeUntil: 0,
-            isActive: false
-        };
+                name: showSkills[i],
+                lastUsed: 0,
+                activeUntil: 0,
+                isActive: false
+            };
             initScreen();
             initAnimation();
             screenMove("gameScreen");
@@ -296,7 +296,7 @@ const createNewBall = (
     dx = 4,
     dy = -4,
     color = "#FF0000"
-) => {
+    ) => {
     return new Ball(x, y, dx, dy, color);
 };
 
@@ -314,7 +314,7 @@ const addBall = () => {
         baseBall.dx > 0 ? -6 : 6,
         -Math.abs(baseBall.dy || 6),
         "#FF0000"
-    );
+        );
 
     balls.push(newBall);
 };
@@ -334,7 +334,7 @@ const fireShotballs = (baseBall) => {
             velocity.dx,
             velocity.dy,
             "#191919"
-        );
+            );
 
         shotball.isShotball = true;
         balls.push(shotball);
@@ -349,7 +349,7 @@ const firePenetrationBalls = (baseBall) => {
         -speed,
         -speed,
         "#AA00FF"
-    );
+        );
 
     const penetrationBallRight = createNewBall(
         baseBall.x,
@@ -357,7 +357,7 @@ const firePenetrationBalls = (baseBall) => {
         speed,
         -speed,
         "#AA00FF"
-    );
+        );
 
     penetrationBallLeft.isPenetrationBall = true;
     penetrationBallRight.isPenetrationBall = true;
@@ -403,11 +403,11 @@ const handleBallWallCollision = (b) => {
 
 const handleBallBarCollision = (b, effects) => {
     const hitBar =
-        b.dy > 0 &&
-        b.y + b.radius > bar.y &&
-        b.y - b.radius < bar.y + 10 &&
-        b.x - b.radius >= bar.x &&
-        b.x + b.radius <= bar.x + bar.width;
+    b.dy > 0 &&
+    b.y + b.radius > bar.y &&
+    b.y - b.radius < bar.y + 10 &&
+    b.x - b.radius >= bar.x &&
+    b.x + b.radius <= bar.x + bar.width;
 
     if (!hitBar) return;
 
@@ -459,16 +459,16 @@ const handleBallBrickCollision = (b, effects) => {
     bricks.forEach((brick) => {
         if (b.isDead) return;
         const isCollidingY =
-            b.y + b.radius > brick.y &&
-            b.y - b.radius < brick.y + brick.height &&
-            b.x > brick.x &&
-            b.x < brick.x + brick.width;
+        b.y + b.radius > brick.y &&
+        b.y - b.radius < brick.y + brick.height &&
+        b.x > brick.x &&
+        b.x < brick.x + brick.width;
 
         const isCollidingX =
-            b.x + b.radius > brick.x &&
-            b.x - b.radius < brick.x + brick.width &&
-            b.y > brick.y &&
-            b.y < brick.y + brick.height;
+        b.x + b.radius > brick.x &&
+        b.x - b.radius < brick.x + brick.width &&
+        b.y > brick.y &&
+        b.y < brick.y + brick.height;
 
         const isColliding = isCollidingY || isCollidingX;
 
@@ -560,17 +560,17 @@ const getDistanceBetweenBricks = (brickA, brickB) => {
 
 const findChainLightningTargets = (originBrick) => {
     return bricks
-        .filter((brick) => {
-            if (brick === originBrick) return false;
-            if (brick.hp <= 0) return false;
+    .filter((brick) => {
+        if (brick === originBrick) return false;
+        if (brick.hp <= 0) return false;
 
-            const distance = getDistanceBetweenBricks(originBrick, brick);
-            return distance <= CHAIN_LIGHTNING_RANGE;
-        })
-        .sort((a, b) => {
-            return getDistanceBetweenBricks(originBrick, a) - getDistanceBetweenBricks(originBrick, b);
-        })
-        .slice(0, CHAIN_LIGHTNING_TARGET_COUNT);
+        const distance = getDistanceBetweenBricks(originBrick, brick);
+        return distance <= CHAIN_LIGHTNING_RANGE;
+    })
+    .sort((a, b) => {
+        return getDistanceBetweenBricks(originBrick, a) - getDistanceBetweenBricks(originBrick, b);
+    })
+    .slice(0, CHAIN_LIGHTNING_TARGET_COUNT);
 };
 
 const triggerChainLightning = (originBrick) => {
@@ -1038,7 +1038,7 @@ const updateBossProjectiles = () => {
                 !projectile.reflected &&
                 isFireActive(projectile, now) &&
                 isProjectileHitBar(projectile)
-            ) {
+                ) {
                 if (now - projectile.lastDamageTime >= projectile.damageInterval) {
                     projectile.lastDamageTime = now;
                     life -= projectile.damage;
@@ -1440,7 +1440,7 @@ const isProjectileHitBar = (projectile) => {
         targetLeft < projectileRight &&
         targetBottom > projectileTop &&
         targetTop < projectileBottom
-    );
+        );
 };
 
 const isProjectileHitReflectShield = (projectile) => {
@@ -1461,12 +1461,12 @@ const isProjectileHitReflectShield = (projectile) => {
     const closestX = Math.max(
         projectile.x,
         Math.min(shield.x, projectile.x + projectile.width)
-    );
+        );
 
     const closestY = Math.max(
         projectile.y,
         Math.min(shield.y, projectile.y + projectile.height)
-    );
+        );
 
     const dx = shield.x - closestX;
     const dy = shield.y - closestY;
@@ -1653,7 +1653,7 @@ const updateSkillUi = () => {
             "skillReady",
             "skillCooldownState",
             "skillActiveState"
-        );
+            );
 
         // 실제 스킬 효과가 살아있는 동안만 ACTIVE 표시
         if (isEffectActive) {
@@ -1698,8 +1698,10 @@ const updateUi = () => {
 
     updateSkillUi();
 
-    if (bossLife <= 0) {
-        //승리
+    if (bossLife <= 0 && !winning) {
+    // 승리 처리가 여러 번 실행되는 것 방지
+        winning = true;
+
         cancelAnimationFrame(animationId);
         isRunning = false;
         context.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -1709,7 +1711,7 @@ const updateUi = () => {
         level++;
         showStoryScreen();
 
-        
+        return;
     }
 
     if (life <= 0 || count <= 0) {
@@ -1791,7 +1793,7 @@ const useSkill = (key) => {
         activePlayerSkill_timeWarp();
     }
     if (skillname == "타오르는 공") {
-    activePlayerSkill_burningBall();
+        activePlayerSkill_burningBall();
     }
     if (skillname == "연쇄 번개") {
         activePlayerSkill_chainLightning();

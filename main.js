@@ -1,5 +1,71 @@
 //전역변수
 let level = 1;
+
+let isBgmOn = true;
+let currentBgmName = null;
+
+const bgmList = {
+    menu: new Audio("audio/menu.mp3"),
+    stage1: new Audio("audio/stage1.mp3"),
+    stage2: new Audio("audio/stage2.mp3"),
+    stage3: new Audio("audio/stage3.mp3"),
+    clear: new Audio("audio/clear.mp3")
+};
+
+Object.values(bgmList).forEach((bgm) => {
+    bgm.loop = true;
+    bgm.volume = 0.45;
+});
+
+const stopAllBgm = () => {
+    Object.values(bgmList).forEach((bgm) => {
+        bgm.pause();
+        bgm.currentTime = 0;
+    });
+};
+
+const playBgm = (name) => {
+    if (!bgmList[name]) return;
+
+    if (currentBgmName === name && !bgmList[name].paused) {
+        return;
+    }
+
+    stopAllBgm();
+    currentBgmName = name;
+
+    if (!isBgmOn) return;
+
+    bgmList[name].play().catch(() => {
+        console.log("브라우저 정책상 사용자 클릭 후 BGM이 재생됩니다.");
+    });
+};
+
+const setBgmOn = (value) => {
+    isBgmOn = value;
+
+    if (!isBgmOn) {
+        stopAllBgm();
+        return;
+    }
+
+    if (currentBgmName) {
+        playBgm(currentBgmName);
+    } else {
+        playBgm("menu");
+    }
+};
+
+const playStageBgm = () => {
+    if (level === 1) {
+        playBgm("stage1");
+    } else if (level === 2) {
+        playBgm("stage2");
+    } else if (level === 3) {
+        playBgm("stage3");
+    }
+};
+
 const storyDelay = 8000;
 let storyTimer = null;
 
@@ -92,6 +158,7 @@ function advanceFromStoryScreen() {
 //화면 이동 함수
 const screenMove = (screenId) => {
 	const section = document.querySelectorAll("section > div");
+
 	section.forEach((screen) => {
 		if (screen.id == screenId)
 			screen.classList.remove("hide");
@@ -99,9 +166,19 @@ const screenMove = (screenId) => {
 			screen.classList.add("hide");
 	});
 
-	if(screenId == "gameScreen") {
+	if (screenId == "gameScreen") {
 		const controlButton = document.querySelector("#controlButton");
 		controlButton.innerText = "start";
+
+		playStageBgm();
+	} 
+	else if (screenId == "storyScreen" && level == 4) {
+		// 3스테이지 보스를 깬 뒤 엔딩 스토리 화면
+		playBgm("clear");
+	}
+	else {
+		// 그 외 모든 화면
+		playBgm("menu");
 	}
 };
 
@@ -290,6 +367,19 @@ function updateSelectedCharacter(newCharacterNum) {
 const SettingScreenSetting = () => {
 	const settingScreen = document.querySelector("#settingScreen");
 	
+	const bgmToggleButton = settingScreen.querySelector("#bgmToggleButton");
+
+	const updateBgmButtonText = () => {
+		bgmToggleButton.innerText = isBgmOn ? "BGM ON" : "BGM OFF";
+	};
+
+	updateBgmButtonText();
+
+	bgmToggleButton.addEventListener("click", () => {
+		setBgmOn(!isBgmOn);
+		updateBgmButtonText();
+	});
+
 	const backButton = settingScreen.querySelector(".backBtn");
 	backButton.addEventListener("click", () => {
 		screenMove("initScreen");
