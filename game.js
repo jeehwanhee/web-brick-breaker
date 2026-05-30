@@ -307,8 +307,8 @@ const getReflectShield = () => {
 const createNewBall = (
     x = canvasWidth / 2,
     y = canvasHeight - 200,
-    dx = 3,
-    dy = -3,
+    dx = 4,
+    dy = -4,
     color = "#FF0000"
 ) => {
     return new Ball(x, y, dx, dy, color);
@@ -424,7 +424,12 @@ const handleBallBarCollision = (b, effects) => {
 
     if (!hitBar) return;
 
-    b.dy = -Math.abs(b.dy);
+    const hitPos = (b.x - (bar.x + bar.width / 2)) / (bar.width / 2);
+    const maxAngle = Math.PI / 3;
+    const angle = hitPos * maxAngle;
+    const speed = Math.sqrt(b.dx * b.dx + b.dy * b.dy);
+    b.dx = speed * Math.sin(angle);
+    b.dy = -speed * Math.cos(angle);
 
     if (bar && bar.character) {
         // 공 충돌 판정식은 그대로 두고, 성공한 순간에만 캐릭터 attack 모션을 연결합니다.

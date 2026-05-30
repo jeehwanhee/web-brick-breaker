@@ -40,6 +40,8 @@ class Ball {
             (this.x - this.radius >= bar.x && this.x + this.radius <= bar.x + bar.width)
         ) {
             this.dy = -Math.abs(this.dy);
+            this.dx += ((this.x + this.radius) - (bar.x + bar.width / 2))*0.1;
+            console.log(this.dx, this.dy);
         }
 
         // 바닥에 닿았을 때
@@ -398,7 +400,7 @@ const level1Setting = () => {
     totLife = 100;
     count = 5;
     power = 20;
-    totBossLife = 500;
+    totBossLife = 100;
 }
 const level2Setting = () => {
     totLife = 100;
