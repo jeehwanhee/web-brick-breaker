@@ -529,18 +529,163 @@ const level3Bricks = () => {
 
 
 
-const bossImgUpdate = (state) => {
+const BOSS_ANIMATION_INTERVAL = 350;
+
+let bossAnimationTimer = null;
+let bossAnimationFrameIndex = 0;
+let currentBossAnimationKey = "";
+
+const bossAnimationConfigs = {
+    // 1스테이지: 나방
+    1: {
+        normal: [
+            "img/boss/moth/moth_1.png",
+            "img/boss/moth/moth_2.png",
+            "img/boss/moth/moth_3.png"
+        ]
+    },
+
+    // 2스테이지: 아그님
+    2: {
+        normal: [
+            "img/boss/agahnim/agahnim_1.png",
+            "img/boss/agahnim/agahnim_2.png",
+            "img/boss/agahnim/agahnim_3.png"
+        ]
+    },
+
+    // 3스테이지: 가논
+    3: {
+    phase1: [
+        "img/boss/ganon/phase1_1.png",
+        "img/boss/ganon/phase1_2.png",
+        "img/boss/ganon/phase1_3.png",
+        "img/boss/ganon/phase1_4.png",
+        "img/boss/ganon/phase1_5.png",
+        "img/boss/ganon/phase1_6.png"
+    ],
+
+    phase2: [
+        "img/boss/ganon/phase2_1.png",
+        "img/boss/ganon/phase2_2.png",
+        "img/boss/ganon/phase2_3.png",
+        "img/boss/ganon/phase2_4.png",
+        "img/boss/ganon/phase2_5.png",
+        "img/boss/ganon/phase2_6.png"
+    ]
+}
+};
+
+const preloadBossAnimationImages = () => {
+    Object.values(bossAnimationConfigs).forEach((stageConfig) => {
+        Object.values(stageConfig).forEach((frames) => {
+            frames.forEach((src) => {
+                const img = new Image();
+                img.src = src;
+            });
+        });
+    });
+};
+
+preloadBossAnimationImages();
+
+const getBossAnimationState = (state) => {
+    if (level === 3) {
+        // 스테이지 시작 직후에는 무조건 가논 1페이즈 이미지
+        if (state === "init") {
+            return "phase1";
+        }
+
+        if (
+            typeof bossLife !== "number" ||
+            typeof totBossLife !== "number" ||
+            totBossLife <= 0
+        ) {
+            return "phase1";
+        }
+
+        const hpRatio = bossLife / totBossLife;
+
+        if (hpRatio < 0.5) {
+            return "phase2";
+        }
+
+        return "phase1";
+    }
+
+    return "normal";
+};
+
+const getBossAnimationFrames = (state) => {
+    const stageConfig = bossAnimationConfigs[level];
+
+    if (!stageConfig) {
+        return [`img/boss/${level}.png`];
+    }
+
+    const animationState = getBossAnimationState(state);
+
+    return stageConfig[animationState] || stageConfig.normal || [`img/boss/${level}.png`];
+};
+
+const updateBossAnimationFrame = (state) => {
     const bossImg = document.querySelector("#bossImg");
+
+    if (!bossImg) return;
+
+    const animationState = getBossAnimationState(state);
+    const nextAnimationKey = `${level}_${animationState}`;
+    const frames = getBossAnimationFrames(state);
+
+    if (frames.length === 0) return;
+
+    // 스테이지가 바뀌거나, 가논 페이즈가 바뀌면 첫 프레임부터 다시 시작
+    if (currentBossAnimationKey !== nextAnimationKey) {
+        currentBossAnimationKey = nextAnimationKey;
+        bossAnimationFrameIndex = 0;
+    }
+
+    bossImg.src = frames[bossAnimationFrameIndex % frames.length];
+
+    bossAnimationFrameIndex =
+        (bossAnimationFrameIndex + 1) % frames.length;
+};
+
+const startBossAnimation = () => {
+    if (bossAnimationTimer !== null) {
+        clearInterval(bossAnimationTimer);
+        bossAnimationTimer = null;
+    }
+
+    currentBossAnimationKey = "";
+    bossAnimationFrameIndex = 0;
+
+    updateBossAnimationFrame("init");
+
+    bossAnimationTimer = setInterval(() => {
+        updateBossAnimationFrame();
+    }, BOSS_ANIMATION_INTERVAL);
+};
+
+const stopBossAnimation = () => {
+    if (bossAnimationTimer !== null) {
+        clearInterval(bossAnimationTimer);
+        bossAnimationTimer = null;
+    }
+};
+
+const bossImgUpdate = (state) => {
     switch (state) {
-    //처음 시작 시, 레벨에 맞는 이미지로 초기화
     case "init":
-        bossImg.src = `img/boss/${level}.png`;
+        startBossAnimation();
         break;
-    //공격 받았을 때
+
     case "attacked":
+        // 보스가 맞았을 때도 따로 이미지를 강제로 바꾸지는 않음.
+        // 가논 체력이 50% 밑으로 내려가면 setInterval 쪽에서 자동으로 phase2로 바뀜.
         break;
     }
-}
+};
 
 
 const bossPatternConfigs = {
