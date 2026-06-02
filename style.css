@@ -406,15 +406,11 @@ section > div:not(#initScreen) {
         filter 0.15s ease;
 }
 
-.mainBtn:hover,
-.subBtn1:hover {
-    filter: brightness(1.15);
-    transform: translateY(-2px);
-}
+
 
 .mainBtn:active,
 .subBtn1:active {
-    transform: translateY(3px);
+    
     box-shadow:
         inset 0 0 0 2px rgba(255, 255, 255, 0.08),
         0 2px 0 #2b1b0c,
@@ -596,8 +592,6 @@ section > div:not(#initScreen) {
 }
 
 .boost:hover {
-    transform: translateY(-8px);
-    filter: brightness(1.12);
     box-shadow:
         0 0 0 3px var(--ui-gold-light),
         0 18px 32px rgba(0, 0, 0, 0.55);
@@ -706,7 +700,7 @@ section > div:not(#initScreen) {
 
 /* 보스 영역 + 플레이 영역을 하나의 배경으로 묶는 래퍼 */
 #battleArea {
-    width: 100%;
+    width: 1080px;
     overflow: hidden;
     box-sizing: border-box;
 
@@ -714,7 +708,7 @@ section > div:not(#initScreen) {
     background-position: center top;
     background-repeat: no-repeat;
 
-    border: 6px solid var(--ui-brown);
+    border: 1px solid var(--ui-brown);
     box-shadow:
         0 0 0 4px var(--ui-gold),
         inset 0 0 45px rgba(0, 0, 0, 0.25);
@@ -758,3 +752,4 @@ section > div:not(#initScreen) {
     );
     pointer-events: none;
 }
+

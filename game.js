@@ -424,7 +424,7 @@ const updateBallWithEffects = (b, effects) => {
 };
 
 const handleBallWallCollision = (b) => {
-    if (b.x < b.radius || b.x > canvasWidth - b.radius) {
+    if (b.x < b.radius + 4 || b.x > canvasWidth - b.radius - 8) {
         b.dx = -b.dx;
     }
 
