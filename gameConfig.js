@@ -8,7 +8,7 @@ class Ball {
         this.y = y;
         this.dx = dx;
         this.dy = dy;
-        this.radius = 10;
+        this.radius = 13;
         this.color = color;
         this.hitBricks =[];
         this.totalhitBricks = 0;
@@ -280,7 +280,7 @@ class Bar {
     constructor() {
         this.width = 150;
         this.height = 10;
-        this.speed = 7;
+        this.speed = 5;
         
         this.x = (canvasWidth - this.width) / 2;
         this.y = canvasHeight - this.height - 10 - 160;
@@ -340,6 +340,7 @@ class Brick {
         this.isBurning = false;
         this.burnTimer = null;
 
+
         //아이템이 없으면 "", 있으면 랜덤 아이템 이름
         this.item = "";
         if ((Math.random() <= itmeChance) ? true : false) {
@@ -352,28 +353,46 @@ class Brick {
     }
 
     draw() {
-        context.beginPath();
-        context.rect(this.x, this.y, this.width, this.height);
+        const imageKey = this.getBrickImageKey();
+        const brickImage =
+            typeof brickImages !== "undefined" ? brickImages[imageKey] : null;
 
-        const isBurnBlinkOn = this.isBurning && Math.floor(Date.now() / 150) % 2 === 0;
+        context.save();
 
-        if (isBurnBlinkOn) {
-            context.fillStyle = "#ff3333";
+        if (
+            brickImage &&
+            !brickImage.failed &&
+            brickImage.complete &&
+            brickImage.naturalWidth > 0
+        ) {
+            context.drawImage(
+                brickImage,
+                this.x,
+                this.y,
+                this.width,
+                this.height
+            );
         } else {
-            context.fillStyle = this.normalColor;
+            // 이미지 로딩 실패 시 기본 사각형 fallback
+            context.beginPath();
+            context.rect(this.x, this.y, this.width, this.height);
+            context.fillStyle = this.normalColor || "#7b6140";
+            context.fill();
+            context.closePath();
         }
 
-        context.fill();
-        context.closePath();
+        const itemLabel = this.item;
+        this.text = itemLabel !== "" ? `${itemLabel} ${this.hp}` : `${this.hp}`;
 
-        context.beginPath();
-        context.fillStyle = 'black';
-        context.font = '15px Arial';
-        context.textAlign = 'center';
-        context.textBaseline = 'middle';
-        this.text = (this.item != "") ? `${this.item}  ${this.hp}` : `${this.hp}`;
+        context.fillStyle = "#fff4c2";
+        context.font = "bold 14px Arial";
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.shadowColor = "rgba(0, 0, 0, 0.9)";
+        context.shadowBlur = 3;
         context.fillText(this.text, this.centerX, this.centerY);
-        context.closePath();
+
+        context.restore();
     }
 
     update(newHp) {
@@ -382,6 +401,27 @@ class Brick {
 
         this.draw();
     }
+
+    getBrickImageKey() {
+        if (this.isBurning) {
+            return "burning";
+        }
+
+        switch (this.item) {
+        case "공격력":
+            return "attack";
+        case "체력회복":
+            return "heal";
+        case "공추가":
+            return "ball";
+        case "바확장":
+            return "bar";
+        default:
+            return "normal";
+        }
+    }
+
+
 }
 
 //블록에 부딪혔을 때
@@ -446,19 +486,19 @@ const level1Setting = () => {
     totLife = 100;
     count = 5;
     power = 20;
-    totBossLife = 100;
+    totBossLife = 500;
 }
 const level2Setting = () => {
     totLife = 100;
     count = 5;
     power = 20;
-    totBossLife = 100;
+    totBossLife = 800;
 }
 const level3Setting = () => {
     totLife = 100;
     count = 5;
     power = 20;
-    totBossLife = 500;
+    totBossLife = 1000;
 }
 
 let bricks = [];
@@ -482,6 +522,10 @@ const level1Bricks = () => {
     const h = [];
     const color = []; //배경 보고 어울리는 색으로 넣기
     const hp = [
+        15, 20, 20, 25, 25, 20, 20, 15,
+        20, 15, 25, 20, 20, 25, 15, 20,
+        15, 20, 20, 15, 15, 20, 20, 15,
+        20, 15, 20, 15, 15, 20, 15, 15
     ];
     for (let i=0; i<x.length;i++) {
         const brick = new Brick(x[i], y[i], w[i], h[i], color[i], hp[i], 0.5);
@@ -511,7 +555,13 @@ const level2Bricks = () => {
     const w = [];
     const h = [];
     const color = []; //배경 보고 어울리는 색으로 넣기
-    const hp = [ 
+    const hp = [
+        25, 30, 35, 40, 45, 40, 35, 30, 25,
+        30, 35, 40, 45, 45, 40, 35, 30,
+        25, 35, 45, 45, 35, 25,
+        30, 40, 40, 30,
+        45, 45,
+        55, 55
     ];
     for (let i=0; i<x.length;i++) {
         const brick = new Brick(x[i], y[i], w[i], h[i], color[i], hp[i], 0.5);
@@ -550,10 +600,10 @@ const level3Bricks = () => {
     const color = []; //배경 보고 어울리는 색으로 넣기
     const hp = [ 
         200, 50, 200, 50, 200,
-        20, 20, 
-        20, 20, 
-        20, 20, 20, 
-        20, 100, 100, 20, 
+        50, 40, 
+        40, 40, 
+        25, 30, 25, 
+        60, 100, 100, 60, 
         100, 
     ];
     for (let i=0; i<x.length;i++) {
@@ -866,33 +916,33 @@ const bossDie = () => {
 // 스킬 스펙 및 이펙트 정의 데이터베이스
 const skillData = {
     "베리어 생성": {
-        cooldown: 1500,  
-        duration: 1000,    
+        cooldown: 6000,  
+        duration: 1500,    
     },
     "유체화": {
-        cooldown: 20000,    
+        cooldown: 9000,    
         duration: 3000,    
 
     },
     "시간감속": {
-        cooldown: 12000,
+        cooldown: 10000,
         duration: 3000,
     },
     "관통 공":{
-        cooldown: 2000,
-        duration: 10000,
+        cooldown: 15000,
+        duration: 5000,
     },
     "산탄공":{
-        cooldown: 2000,
-        duration: 10000,
+        cooldown: 15000,
+        duration: 5000,
     },
     "타오르는 공": {
         cooldown: 8000,
-        duration: 10000,
+        duration: 5000,
     },
     "연쇄 번개": {
         cooldown: 8000,
-        duration: 10000,
+        duration: 5000,
     },
     "튕겨 내기": {
         cooldown: 10000,
