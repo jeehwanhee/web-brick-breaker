@@ -144,7 +144,7 @@ function updateStageScorePanel() {
         `노데미지 클리어 : +${result.noDamageScore}\n` +
         `시간 패널티 : -${result.timePenalty} (${result.elapsedSeconds}초)\n` +
         `이번 정산 점수 : ${result.bonusTotal >= 0 ? "+" : ""}${result.bonusTotal}\n` +
-        `현재 총점 : ${result.totalScore}`;
+        `총점 : ${result.totalScore}`;
 }
 
 
@@ -316,6 +316,28 @@ const gameScreenSetting = () => {
 	//종료하기 버튼은 game.js에서 관리
 
 };
+//블럭 이미지 로딩
+const brickImageSources = {
+    normal: "img/brick/normal.png",
+    attack: "img/brick/attack.png",
+    heal: "img/brick/heal.png",
+    ball: "img/brick/ball.png",
+    bar: "img/brick/bar.png",
+    burning: "img/brick/burning.png"
+};
+
+const brickImages = {};
+
+Object.keys(brickImageSources).forEach((key) => {
+    const image = new Image();
+    image.src = brickImageSources[key];
+
+    image.onerror = () => {
+        image.failed = true;
+    };
+
+    brickImages[key] = image;
+});
 
 //캐릭터, 공 설정을 위한 변수
 // 캐릭터와 공 선택 상태를 저장합니다.
@@ -632,3 +654,4 @@ let showSkills = [];
 
 // 사용자가 가지고 있는 스킬들
 let skills = [];
+

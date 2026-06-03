@@ -78,11 +78,11 @@ const bossSkillImages = {};
 const TIME_WARP_SCALE = 0.5;
 const barrierheight = 30;
 
-const BURN_DAMAGE = 3;
-const BURN_INTERVAL = 500;
+const BURN_DAMAGE = 10;
+const BURN_INTERVAL = 300;
 const BURN_DURATION = 3000;
 
-const CHAIN_LIGHTNING_DAMAGE = 10;
+const CHAIN_LIGHTNING_DAMAGE = 20;
 const CHAIN_LIGHTNING_TARGET_COUNT = 4;
 const CHAIN_LIGHTNING_RANGE = 220;
 
@@ -314,8 +314,8 @@ const getReflectShield = () => {
 const createNewBall = (
     x = canvasWidth / 2,
     y = canvasHeight - 200,
-    dx = 4,
-    dy = -4,
+    dx = 3,
+    dy = -3,
     color = "#FF0000"
     ) => {
     return new Ball(x, y, dx, dy, color);
@@ -330,8 +330,8 @@ const resetBalls = () => {
         ? bar.y - 10
         : canvasHeight - 200;
 
-    const dx = Math.random() < 0.5 ? -4 : 4;
-    const dy = -4;
+    const dx = Math.random() < 0.5 ? -3 : 3;
+    const dy = -3;
 
     ball = createNewBall(spawnX, spawnY, dx, dy);
     balls = [ball];
@@ -343,20 +343,20 @@ const addBall = () => {
     const newBall = createNewBall(
         baseBall.x,
         baseBall.y,
-        baseBall.dx > 0 ? -6 : 6,
-        -Math.abs(baseBall.dy || 6),
+        baseBall.dx > 0 ? -3 : 3,
+        -3,
         "#FF0000"
-        );
+    );
 
     balls.push(newBall);
 };
 const fireShotballs = (baseBall) => {
     const shotBallVelocities = [
-        { dx: -6, dy: -3 },
-        { dx: -4, dy: -5 },
-        { dx: 0,  dy: -6 },
-        { dx: 4,  dy: -5 },
-        { dx: 6,  dy: -3 },
+        { dx: -4, dy: -2 },
+        { dx: -3, dy: -4 },
+        { dx: 0,  dy: -4 },
+        { dx: 3,  dy: -4 },
+        { dx: 4,  dy: -2 },
     ];
 
     shotBallVelocities.forEach((velocity) => {
