@@ -48,7 +48,7 @@ let totalPausedTime = 0;
 const skillKeys = ["Q", "W", "E"];
 
 let bossSkillTimer = null;
-const BOSS_ATTACK_DELAY = 5000;
+const BOSS_ATTACK_DELAY = 12000;
 
 const BOSS_WARNING_TIME = 1000;
 const BOSS_RETURN_PAUSE_TIME = 1000;
@@ -1032,17 +1032,44 @@ const createMothPowder = (pattern) => {
 };
 
 const createDiagonalWind = (pattern) => {
+    const interval = pattern.interval || 800;
+
+    // 1번째 바람: 오른쪽 위 → 왼쪽 아래
     bossProjectiles.push({
         kind: "rect",
-        x: canvasWidth - 200,
+
+        x: canvasWidth - pattern.width,
         y: -pattern.height,
+
         dx: -pattern.speed,
         dy: pattern.speed,
+
         width: pattern.width,
         height: pattern.height,
+
         damage: pattern.damage,
         imageSrc: pattern.imageSrc,
         hit: false
+    });
+
+    // 2번째 바람: 왼쪽 위 → 오른쪽 아래
+    scheduleBossSpawn(interval, () => {
+        bossProjectiles.push({
+            kind: "rect",
+
+            x: 0,
+            y: -pattern.height,
+
+            dx: pattern.speed,
+            dy: pattern.speed,
+
+            width: pattern.width,
+            height: pattern.height,
+
+            damage: pattern.damage,
+            imageSrc: pattern.imageSrc,
+            hit: false
+        });
     });
 };
 

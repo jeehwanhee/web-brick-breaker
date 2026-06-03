@@ -26,92 +26,92 @@ class Ball {
         if (
             typeof selectedBallFrames !== "undefined" &&
             selectedBallFrames.length > 0
-        ) {
+            ) {
             const currentFrame = selectedBallFrames[this.frameIndex % selectedBallFrames.length];
 
-            this.frameTimer++;
+        this.frameTimer++;
 
-            if (this.frameTimer >= this.frameDelay) {
-                this.frameTimer = 0;
-                this.frameIndex = (this.frameIndex + 1) % selectedBallFrames.length;
-            }
-
-            if (
-                currentFrame &&
-                !currentFrame.failed &&
-                currentFrame.complete &&
-                currentFrame.naturalWidth > 0
-            ) {
-                context.drawImage(
-                    currentFrame,
-                    this.x - this.radius,
-                    this.y - this.radius,
-                    this.radius * 2,
-                    this.radius * 2
-                );
-                return;
-            }
+        if (this.frameTimer >= this.frameDelay) {
+            this.frameTimer = 0;
+            this.frameIndex = (this.frameIndex + 1) % selectedBallFrames.length;
         }
 
-        context.beginPath();
-        context.fillStyle = this.color;
-        context.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
-        context.fill();
-        context.closePath();
+        if (
+            currentFrame &&
+            !currentFrame.failed &&
+            currentFrame.complete &&
+            currentFrame.naturalWidth > 0
+            ) {
+            context.drawImage(
+                currentFrame,
+                this.x - this.radius,
+                this.y - this.radius,
+                this.radius * 2,
+                this.radius * 2
+                );
+        return;
+    }
+}
+
+context.beginPath();
+context.fillStyle = this.color;
+context.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
+context.fill();
+context.closePath();
+}
+
+update() {
+    if (this.x < this.radius || this.x > canvasWidth - this.radius) {
+        this.dx = -this.dx;
     }
 
-    update() {
-        if (this.x < this.radius || this.x > canvasWidth - this.radius) {
-            this.dx = -this.dx;
-        }
-
-        if (this.y < this.radius) {
-            this.dy = -this.dy;
-        }
+    if (this.y < this.radius) {
+        this.dy = -this.dy;
+    }
 
         // 바에 부딪혔을 때
-        if (
-            (this.y + this.radius > bar.y && this.y - this.radius < bar.y + 10) &&
-            (this.x - this.radius >= bar.x && this.x + this.radius <= bar.x + bar.width)
+    if (
+        (this.y + this.radius > bar.y && this.y - this.radius < bar.y + 10) &&
+        (this.x - this.radius >= bar.x && this.x + this.radius <= bar.x + bar.width)
         ) {
-            this.dy = -Math.abs(this.dy);
-            this.dx += ((this.x + this.radius) - (bar.x + bar.width / 2))*0.1;
-            console.log(this.dx, this.dy);
-        }
+        this.dy = -Math.abs(this.dy);
+    this.dx += ((this.x + this.radius) - (bar.x + bar.width / 2))*0.1;
+    console.log(this.dx, this.dy);
+}
 
         // 바닥에 닿았을 때
-        if (this.y > canvasHeight - this.radius) {
-            this.isDead = true;
-            return;
-        }
+if (this.y > canvasHeight - this.radius) {
+    this.isDead = true;
+    return;
+}
 
         // 벽돌에 부딪혔을 때
-        bricks.forEach((brick) => {
-            let flag = false;
+bricks.forEach((brick) => {
+    let flag = false;
 
-            if (this.y + this.radius > brick.y && this.y - this.radius < brick.y + brick.height) {
-                if (this.x > brick.x && this.x < brick.x + brick.width) {
-                    this.dy = -this.dy;
-                    flag = true;
-                }
-            }
-
-            if (this.x + this.radius > brick.x && this.x - this.radius < brick.x + brick.width) {
-                if (this.y > brick.y && this.y < brick.y + brick.height) {
-                    this.dx = -this.dx;
-                    flag = true;
-                }
-            }
-
-            if (flag) {
-                brickHit(brick);
-            }
-        });
-
-        this.x += this.dx;
-        this.y += this.dy;
-        this.draw();
+    if (this.y + this.radius > brick.y && this.y - this.radius < brick.y + brick.height) {
+        if (this.x > brick.x && this.x < brick.x + brick.width) {
+            this.dy = -this.dy;
+            flag = true;
+        }
     }
+
+    if (this.x + this.radius > brick.x && this.x - this.radius < brick.x + brick.width) {
+        if (this.y > brick.y && this.y < brick.y + brick.height) {
+            this.dx = -this.dx;
+            flag = true;
+        }
+    }
+
+    if (flag) {
+        brickHit(brick);
+    }
+});
+
+this.x += this.dx;
+this.y += this.dy;
+this.draw();
+}
 }
 
 //Character클래스
@@ -261,19 +261,19 @@ class Character {
             !this.previewImage.failed &&
             this.previewImage.complete &&
             this.previewImage.naturalWidth > 0
-        ) {
+            ) {
             context.beginPath();
-            context.drawImage(this.previewImage, rect.x, rect.y, rect.width, rect.height);
-            context.closePath();
-        }
-        else {
-            context.beginPath();
-            context.rect(rect.x, rect.y, rect.width, rect.height);
-            context.fillStyle = "#0095DD";
-            context.fill();
-            context.closePath();
-        }
+        context.drawImage(this.previewImage, rect.x, rect.y, rect.width, rect.height);
+        context.closePath();
     }
+    else {
+        context.beginPath();
+        context.rect(rect.x, rect.y, rect.width, rect.height);
+        context.fillStyle = "#0095DD";
+        context.fill();
+        context.closePath();
+    }
+}
 }
 
 class Bar {
@@ -309,22 +309,22 @@ class Bar {
 
     // 이동 입력은 기존 Bar 이동 로직을 유지하고, 이동 결과에 따라 캐릭터 상태만 바꿉니다.
     update(showDefaultBar = true) {
-    let nextCharacterState = "idle";
+        let nextCharacterState = "idle";
 
-    if (rightPressed && this.x < canvasWidth - this.width) {
-        this.x += this.speed;
-        nextCharacterState = "moveRight";
-    } else if (leftPressed && this.x > 0) {
-        this.x -= this.speed;
-        nextCharacterState = "moveLeft";
+        if (rightPressed && this.x < canvasWidth - this.width) {
+            this.x += this.speed;
+            nextCharacterState = "moveRight";
+        } else if (leftPressed && this.x > 0) {
+            this.x -= this.speed;
+            nextCharacterState = "moveLeft";
+        }
+
+        if (!this.character.isAttackLocked) {
+            this.character.setState(nextCharacterState);
+        }
+
+        this.draw(showDefaultBar);
     }
-
-    if (!this.character.isAttackLocked) {
-        this.character.setState(nextCharacterState);
-    }
-
-    this.draw(showDefaultBar);
-}
 }
 
 class Brick {
@@ -355,7 +355,7 @@ class Brick {
     draw() {
         const imageKey = this.getBrickImageKey();
         const brickImage =
-            typeof brickImages !== "undefined" ? brickImages[imageKey] : null;
+        typeof brickImages !== "undefined" ? brickImages[imageKey] : null;
 
         context.save();
 
@@ -364,62 +364,62 @@ class Brick {
             !brickImage.failed &&
             brickImage.complete &&
             brickImage.naturalWidth > 0
-        ) {
+            ) {
             context.drawImage(
                 brickImage,
                 this.x,
                 this.y,
                 this.width,
                 this.height
-            );
-        } else {
+                );
+    } else {
             // 이미지 로딩 실패 시 기본 사각형 fallback
-            context.beginPath();
-            context.rect(this.x, this.y, this.width, this.height);
-            context.fillStyle = this.normalColor || "#7b6140";
-            context.fill();
-            context.closePath();
-        }
-
-        const itemLabel = this.item;
-        this.text = itemLabel !== "" ? `${itemLabel} ${this.hp}` : `${this.hp}`;
-
-        context.fillStyle = "#fff4c2";
-        context.font = "bold 14px Arial";
-        context.textAlign = "center";
-        context.textBaseline = "middle";
-        context.shadowColor = "rgba(0, 0, 0, 0.9)";
-        context.shadowBlur = 3;
-        context.fillText(this.text, this.centerX, this.centerY);
-
-        context.restore();
+        context.beginPath();
+        context.rect(this.x, this.y, this.width, this.height);
+        context.fillStyle = this.normalColor || "#7b6140";
+        context.fill();
+        context.closePath();
     }
 
-    update(newHp) {
-        this.hp = newHp;
+    const itemLabel = this.item;
+    this.text = itemLabel !== "" ? `${itemLabel} ${this.hp}` : `${this.hp}`;
+
+    context.fillStyle = "#fff4c2";
+    context.font = "bold 14px Arial";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.shadowColor = "rgba(0, 0, 0, 0.9)";
+    context.shadowBlur = 3;
+    context.fillText(this.text, this.centerX, this.centerY);
+
+    context.restore();
+}
+
+update(newHp) {
+    this.hp = newHp;
         //색깔 변경? 등등
 
-        this.draw();
+    this.draw();
+}
+
+getBrickImageKey() {
+    if (this.isBurning) {
+        return "burning";
     }
 
-    getBrickImageKey() {
-        if (this.isBurning) {
-            return "burning";
-        }
-
-        switch (this.item) {
-        case "공격력":
-            return "attack";
-        case "체력회복":
-            return "heal";
-        case "공추가":
-            return "ball";
-        case "바확장":
-            return "bar";
-        default:
-            return "normal";
-        }
+    switch (this.item) {
+    case "공격력":
+        return "attack";
+    case "체력회복":
+        return "heal";
+    case "공추가":
+        return "ball";
+    case "바확장":
+        return "bar";
+    default:
+        return "normal";
     }
+}
 
 
 }
@@ -641,24 +641,24 @@ const bossAnimationConfigs = {
 
     // 3스테이지: 가논
     3: {
-    phase1: [
-        "img/boss/ganon/phase1_1.png",
-        "img/boss/ganon/phase1_2.png",
-        "img/boss/ganon/phase1_3.png",
-        "img/boss/ganon/phase1_4.png",
-        "img/boss/ganon/phase1_5.png",
-        "img/boss/ganon/phase1_6.png"
-    ],
+        phase1: [
+            "img/boss/ganon/phase1_1.png",
+            "img/boss/ganon/phase1_2.png",
+            "img/boss/ganon/phase1_3.png",
+            "img/boss/ganon/phase1_4.png",
+            "img/boss/ganon/phase1_5.png",
+            "img/boss/ganon/phase1_6.png"
+        ],
 
-    phase2: [
-        "img/boss/ganon/phase2_1.png",
-        "img/boss/ganon/phase2_2.png",
-        "img/boss/ganon/phase2_3.png",
-        "img/boss/ganon/phase2_4.png",
-        "img/boss/ganon/phase2_5.png",
-        "img/boss/ganon/phase2_6.png"
-    ]
-}
+        phase2: [
+            "img/boss/ganon/phase2_1.png",
+            "img/boss/ganon/phase2_2.png",
+            "img/boss/ganon/phase2_3.png",
+            "img/boss/ganon/phase2_4.png",
+            "img/boss/ganon/phase2_5.png",
+            "img/boss/ganon/phase2_6.png"
+        ]
+    }
 };
 
 const preloadBossAnimationImages = () => {
@@ -685,20 +685,20 @@ const getBossAnimationState = (state) => {
             typeof bossLife !== "number" ||
             typeof totBossLife !== "number" ||
             totBossLife <= 0
-        ) {
+            ) {
             return "phase1";
-        }
-
-        const hpRatio = bossLife / totBossLife;
-
-        if (hpRatio < 0.5) {
-            return "phase2";
-        }
-
-        return "phase1";
     }
 
-    return "normal";
+    const hpRatio = bossLife / totBossLife;
+
+    if (hpRatio < 0.5) {
+        return "phase2";
+    }
+
+    return "phase1";
+}
+
+return "normal";
 };
 
 const getBossAnimationFrames = (state) => {
@@ -733,7 +733,7 @@ const updateBossAnimationFrame = (state) => {
     bossImg.src = frames[bossAnimationFrameIndex % frames.length];
 
     bossAnimationFrameIndex =
-        (bossAnimationFrameIndex + 1) % frames.length;
+    (bossAnimationFrameIndex + 1) % frames.length;
 };
 
 const startBossAnimation = () => {
@@ -794,7 +794,10 @@ const bossPatternConfigs = {
             width: 160,
             height: 240,
             speed: 7,
-            damage: 12
+            damage: 12,
+
+    // 첫 번째 바람 후 0.8초 뒤 두 번째 바람 생성
+            interval: 800
         },
         {
             id: "moth_charge",
@@ -803,7 +806,7 @@ const bossPatternConfigs = {
             imageSrc: "img/bossSkill/moth_charge.png",
             width: 280,
             height: 200,
-            speed: 12,
+            speed: 8,
             damage: 15
         }
     ],
