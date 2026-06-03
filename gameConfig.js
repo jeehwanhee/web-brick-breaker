@@ -15,9 +15,44 @@ class Ball {
         this.isPenetrationBall = false;
         this.isShotball = false;
         this.isDead = false;
+        // 공 이미지 애니메이션을 몇 번째 장면까지 보여줬는지 저장합니다.
+        this.frameIndex = 0;
+        this.frameTimer = 0;
+        this.frameDelay = 6;
     }
 
     draw() {
+        // 선택한 공 이미지가 있으면 원 대신 이미지로 공을 그립니다.
+        if (
+            typeof selectedBallFrames !== "undefined" &&
+            selectedBallFrames.length > 0
+        ) {
+            const currentFrame = selectedBallFrames[this.frameIndex % selectedBallFrames.length];
+
+            this.frameTimer++;
+
+            if (this.frameTimer >= this.frameDelay) {
+                this.frameTimer = 0;
+                this.frameIndex = (this.frameIndex + 1) % selectedBallFrames.length;
+            }
+
+            if (
+                currentFrame &&
+                !currentFrame.failed &&
+                currentFrame.complete &&
+                currentFrame.naturalWidth > 0
+            ) {
+                context.drawImage(
+                    currentFrame,
+                    this.x - this.radius,
+                    this.y - this.radius,
+                    this.radius * 2,
+                    this.radius * 2
+                );
+                return;
+            }
+        }
+
         context.beginPath();
         context.fillStyle = this.color;
         context.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);

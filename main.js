@@ -69,32 +69,42 @@ const playStageBgm = () => {
 const storyDelay = 8000;
 let storyTimer = null;
 
+// 현재 보고 있는 시나리오가 프롤로그인지, 몇 단계인지 기억합니다.
+let currentStoryKey = null;
+
 // level별 storyScreen 출력 데이터를 한곳에서 관리합니다.
 // 문구, 버튼 텍스트, 배경 이미지를 level 기준으로 쉽게 교체하기 위한 구조입니다.
 const storyData = {
+    // 1단계 시작 전에 먼저 보여줄 프롤로그입니다.
+    prologue: {
+        title: "Prologue",
+        content: "링크가 여행을 떠나있던 중 평화롭던 하이랄 성에 갑작스레 들이닥친 가논군단!\n하이랄 성은 점령당했고, 거기에 있던 젤다는 붙잡혀버렸다...\n늘 그랬듯 링크는 하이랄 성과 젤다를 되찾기 위해 가논을 물리치러 가기로 하는데...",
+        buttonText: "넘기기",
+        background: "img/background/prologue.png"
+    },
     1: {
-        title: "초원의 그림자",
-        content: "평화로운 초원에 수상한 기운이 퍼지기 시작했다.\n왕자는 성에 갇힌 공주를 구하기 위해 첫 번째 괴물 나방과 맞선다.",
+        title: "거대 나방 등장!",
+        content: "성 안으로 진입하기 위해 성문으로 향한 링크...\n하지만 그 앞은 가논의 수하로 보이는 거대 나방이 가로막고 있었다...\n링크는 빨리 나방을 해치워버리기로 하는데...",
         buttonText: "넘기기",
         background: "img/background/stage1.png"
     },
     2: {
-        title: "어둠의 성",
-        content: "초원을 지나 성에 도착한 왕자.\n성 안에는 번개를 다루는 마법사 아그님이 기다리고 있었다.",
+        title: "'가논의 오른팔' 아그님!",
+        content: "거대 나방을 물리치고 하이랄 성 내부로 진입한 링크...\n하지만 젤다가 갇힌 곳으로 가는 길은 '가논의 오른팔'으로 불리우는\n아그님이 가로막고 있었다!\n",
         buttonText: "넘기기",
         background: "img/background/stage2.png"
     },
     3: {
-        title: "최후의 방",
-        content: "모든 길의 끝에서 왕자는 가논과 마주한다.\n공주를 구하기 위한 마지막 전투가 시작된다.",
+        title: "최종 결전!",
+        content: "어찌저찌 마왕 가논의 방까지 오게 된 링크...\n벌써부터 열기가 느껴지는 문 앞에서 링크는 가논과의 결투를 시작하기 위해\n그 위풍당당한 발걸음을 내딛는다!!!",
         buttonText: "넘기기",
         background: "img/background/stage3.png"
     },
     4: {
-        title: "공주 구출",
-        content: "가논을 쓰러뜨린 왕자는 마침내 공주를 구출했다.\n왕국에는 다시 평화가 찾아왔다.",
+        title: "Ending",
+        content: "가논과의 웅장치열한 최종 결전 끝에 결국 가논을 쓰러뜨린 링크!!!\n젤다 구출도 성공했다! 젤다는 신성마법으로 가논을 봉인했고,\n둘은 창문 너머로 보이는 아름다운 풍경을 만끽한다!",
         buttonText: "처음으로",
-        background: "img/stage/stage1.png"
+        background: "img/background/ending.png"
     }
 };
 
@@ -140,8 +150,11 @@ function updateStageScorePanel() {
 
 // 현재 level에 맞는 시나리오를 storyScreen에 출력합니다.
 // 화면 전환은 기존 screenMove 함수를 그대로 사용해 다른 화면 로직과 섞이지 않게 합니다.
-function showStoryScreen() {
-    const story = storyData[level] || storyData[1];
+function showStoryScreen(storyKey = level) {
+    // 다음 버튼을 눌렀을 때 어디로 넘어갈지 알기 위해 현재 시나리오를 저장합니다.
+    currentStoryKey = storyKey;
+
+    const story = storyData[storyKey] || storyData[level] || storyData[1];
 
     const storyScreen = document.querySelector("#storyScreen");
     const storyTitle = document.querySelector("#storyTitle");
@@ -156,17 +169,17 @@ function showStoryScreen() {
 
     screenMove("storyScreen");
 
-	if (storyTimer !== null) {
-		clearTimeout(storyTimer);
-		storyTimer = null;
-	}
+    if (storyTimer !== null) {
+        clearTimeout(storyTimer);
+        storyTimer = null;
+    }
 
-	if (level !== 4) {
-		storyTimer = setTimeout(() => {
-			storyTimer = null;
-			advanceFromStoryScreen();
-		}, storyDelay);
-	}
+    if (storyKey !== 4) {
+        storyTimer = setTimeout(() => {
+            storyTimer = null;
+            advanceFromStoryScreen();
+        }, storyDelay);
+    }
 }
 
 function advanceFromStoryScreen() {
@@ -175,10 +188,19 @@ function advanceFromStoryScreen() {
         storyTimer = null;
     }
 
-    if (level == 4) {
+    if (currentStoryKey === "prologue") {
+        // 프롤로그 다음에는 바로 1단계 시나리오를 보여줍니다.
+        showStoryScreen(1);
+        return;
+    }
+
+    if (currentStoryKey === 4 || level === 4) {
+        currentStoryKey = null;
         screenMove("initScreen");
         return;
     }
+
+    currentStoryKey = null;
     initBoostScreen();
 }
 
@@ -258,9 +280,13 @@ const startGameSreenSetting = () => {
 
 	const mainButton = startGameScreen.querySelector(".mainBtn");
 	mainButton.addEventListener("click", () => {
-		showStoryScreen();
-	});
-
+        // 1단계는 프롤로그부터, 2/3단계는 해당 단계 시나리오부터 시작합니다.
+        if (level === 1) {
+            showStoryScreen("prologue");
+        } else {
+            showStoryScreen(level);
+        }
+    });
 	//게임시작 버튼 처리는 game.js에서
 
 	const levelButtons = startGameScreen.querySelectorAll("#selectLevel > div");
@@ -297,70 +323,171 @@ let characterNum = 1;
 //characterImg.src = `img/character/${characterNum}.png`; 캐릭터 이미지 선택방식 변경
 
 let ballNum = 1;
-const ballImg = new Image();
-ballImg.src = `img/ball/${ballNum}.png`;
+
+// 공 선택 화면과 게임 화면에서 사용할 공 이미지 목록입니다.
+const ballAnimationConfig = {
+    1: {
+        preview: "img/ball/boomerang/1.png",
+        frames: [
+            "img/ball/boomerang/1.png",
+            "img/ball/boomerang/2.png",
+            "img/ball/boomerang/3.png",
+            "img/ball/boomerang/4.png"
+        ]
+    },
+    2: {
+        preview: "img/ball/sword/1.png",
+        frames: [
+            "img/ball/sword/1.png",
+            "img/ball/sword/2.png",
+            "img/ball/sword/3.png",
+            "img/ball/sword/4.png"
+        ]
+    }
+};
+
+// 현재 선택된 공의 애니메이션 이미지들을 저장합니다.
+let selectedBallFrames = [];
 
 //캐릭터클래스가 가져올 설정값
 // 캐릭터별 미리보기와 상태별 애니메이션 이미지 경로를 관리합니다.
 // 상태별 이미지 개수가 달라도 Character 클래스가 배열 길이에 맞춰 재생합니다.
 const characterAnimationConfig = {
     1: {
-        preview: "img/character/character1/preview.png",
+        preview: "img/character/green/idle/1.png",
         width: 100,
         height: 150,
         animations: {
             idle: [
-                "img/character/character1/idle/idle_1.png"
+                "img/character/green/idle/1.png"
             ],
             moveLeft: [
-                "img/character/character1/move_left/move_left_1.png",
-                "img/character/character1/move_left/move_left_2.png",
-                "img/character/character1/move_left/move_left_3.png",
-                "img/character/character1/move_left/move_left_4.png"
+                "img/character/green/move_left/1.png",
+                "img/character/green/move_left/2.png",
+                "img/character/green/move_left/3.png",
+                "img/character/green/move_left/4.png",
+                "img/character/green/move_left/5.png",
+                "img/character/green/move_left/6.png"
             ],
             moveRight: [
-                "img/character/character1/move_right/move_right_1.png",
-                "img/character/character1/move_right/move_right_2.png",
-                "img/character/character1/move_right/move_right_3.png",
-                "img/character/character1/move_right/move_right_4.png"
+                "img/character/green/move_right/1.png",
+                "img/character/green/move_right/2.png",
+                "img/character/green/move_right/3.png",
+                "img/character/green/move_right/4.png",
+                "img/character/green/move_right/5.png",
+                "img/character/green/move_right/6.png"
             ],
             attack: [
-                "img/character/character1/attack/attack_1.png",
-                "img/character/character1/attack/attack_2.png",
-                "img/character/character1/attack/attack_3.png",
-                "img/character/character1/attack/attack_4.png",
-                "img/character/character1/attack/attack_5.png",
-                "img/character/character1/attack/attack_6.png",
-                "img/character/character1/attack/attack_7.png",
-                "img/character/character1/attack/attack_8.png",
-                "img/character/character1/attack/attack_9.png"
+                "img/character/green/attack/1.png",
+                "img/character/green/attack/2.png",
+                "img/character/green/attack/3.png",
+                "img/character/green/attack/4.png",
+                "img/character/green/attack/5.png"
             ]
         }
     },
 
     2: {
-        preview: "img/character/2.png",
+        preview: "img/character/blue/idle/1.png",
         width: 100,
         height: 150,
         animations: {
-            idle: [],
-            moveLeft: [],
-            moveRight: [],
-            attack: []
+            idle: [
+                "img/character/blue/idle/1.png"
+            ],
+            moveLeft: [
+                "img/character/blue/move_left/1.png",
+                "img/character/blue/move_left/2.png",
+                "img/character/blue/move_left/3.png",
+                "img/character/blue/move_left/4.png",
+                "img/character/blue/move_left/5.png",
+                "img/character/blue/move_left/6.png"
+            ],
+            moveRight: [
+                "img/character/blue/move_right/1.png",
+                "img/character/blue/move_right/2.png",
+                "img/character/blue/move_right/3.png",
+                "img/character/blue/move_right/4.png",
+                "img/character/blue/move_right/5.png",
+                "img/character/blue/move_right/6.png"
+            ],
+            attack: [
+                "img/character/blue/attack/1.png",
+                "img/character/blue/attack/2.png",
+                "img/character/blue/attack/3.png",
+                "img/character/blue/attack/4.png",
+                "img/character/blue/attack/5.png"
+            ]
         }
     },
 
     3: {
-        preview: "img/character/3.png",
+        preview: "img/character/pink/idle/1.png",
         width: 100,
         height: 150,
         animations: {
-            idle: [],
-            moveLeft: [],
-            moveRight: [],
-            attack: []
+            idle: [
+                "img/character/pink/idle/1.png"
+            ],
+            moveLeft: [
+                "img/character/pink/move_left/1.png",
+                "img/character/pink/move_left/2.png",
+                "img/character/pink/move_left/3.png",
+                "img/character/pink/move_left/4.png",
+                "img/character/pink/move_left/5.png",
+                "img/character/pink/move_left/6.png"
+            ],
+            moveRight: [
+                "img/character/pink/move_right/1.png",
+                "img/character/pink/move_right/2.png",
+                "img/character/pink/move_right/3.png",
+                "img/character/pink/move_right/4.png",
+                "img/character/pink/move_right/5.png",
+                "img/character/pink/move_right/6.png"
+            ],
+            attack: [
+                "img/character/pink/attack/1.png",
+                "img/character/pink/attack/2.png",
+                "img/character/pink/attack/3.png",
+                "img/character/pink/attack/4.png",
+                "img/character/pink/attack/5.png"
+            ]
         }
-    }
+    },
+
+    4: {
+        preview: "img/character/red/idle/1.png",
+        width: 100,
+        height: 150,
+        animations: {
+            idle: [
+                "img/character/red/idle/1.png"
+            ],
+            moveLeft: [
+                "img/character/red/move_left/1.png",
+                "img/character/red/move_left/2.png",
+                "img/character/red/move_left/3.png",
+                "img/character/red/move_left/4.png",
+                "img/character/red/move_left/5.png",
+                "img/character/red/move_left/6.png"
+            ],
+            moveRight: [
+                "img/character/red/move_right/1.png",
+                "img/character/red/move_right/2.png",
+                "img/character/red/move_right/3.png",
+                "img/character/red/move_right/4.png",
+                "img/character/red/move_right/5.png",
+                "img/character/red/move_right/6.png"
+            ],
+            attack: [
+                "img/character/red/attack/1.png",
+                "img/character/red/attack/2.png",
+                "img/character/red/attack/3.png",
+                "img/character/red/attack/4.png",
+                "img/character/red/attack/5.png"
+            ]
+        }
+    },
 };
 
 // 이미지 로딩 실패 여부를 표시해 Character.draw()에서 fallback할 수 있게 함
@@ -394,6 +521,25 @@ function updateSelectedCharacter(newCharacterNum) {
     }
 }
 
+function updateSelectedBall(newBallNum) {
+    ballNum = newBallNum;
+
+    const config = ballAnimationConfig[ballNum] || ballAnimationConfig[1];
+    const ballPreviewImg = document.querySelector("#ballImg");
+
+    // 설정 화면에 보이는 공 미리보기 이미지를 바꿉니다.
+    if (ballPreviewImg) {
+        ballPreviewImg.src = config.preview;
+
+        ballPreviewImg.onerror = () => {
+            ballPreviewImg.src = ballAnimationConfig[1].preview;
+        };
+    }
+
+    // 게임 화면에서 움직이는 공도 선택한 공 이미지로 바꿉니다.
+    selectedBallFrames = config.frames.map(createImage);
+}
+
 //설정 화면
 const SettingScreenSetting = () => {
 	const settingScreen = document.querySelector("#settingScreen");
@@ -419,7 +565,7 @@ const SettingScreenSetting = () => {
 	const prevCharButton = settingScreen.querySelector("#prevCharButton");
 	prevCharButton.addEventListener("click", () => {
 		if (characterNum<=1)
-			characterNum = 3;
+			characterNum = 4;
 		else
 			characterNum--;
 		//characterImg.src = `img/character/${characterNum}.png`; 대신 아래로 변경
@@ -427,7 +573,7 @@ const SettingScreenSetting = () => {
 	});
 	const nextCharButton = settingScreen.querySelector("#nextCharButton");
 	nextCharButton.addEventListener("click", () => {
-		if (characterNum>=3)
+		if (characterNum>=4)
 			characterNum = 1;
 		else
 			characterNum++;
@@ -437,20 +583,24 @@ const SettingScreenSetting = () => {
 
 	const prevBallButton = settingScreen.querySelector("#prevBallButton");
 	prevBallButton.addEventListener("click", () => {
+        // 현재 공 종류가 2개라서 1번 앞은 2번으로 돌아갑니다.
 		if (ballNum<=1)
-			ballNum = 3;
+			ballNum = 2;
 		else
 			ballNum--;
-		ballImg.src = `img/ball/${ballNum}.png`;
+		updateSelectedBall(ballNum);
 	});
 	const nextBallButton = settingScreen.querySelector("#nextBallButton");
 	nextBallButton.addEventListener("click", () => {
-		if (ballNum>=3)
+        // 현재 공 종류가 2개라서 2번 다음은 1번으로 돌아갑니다.
+		if (ballNum>=2)
 			ballNum = 1;
 		else
 			ballNum++;
-		ballImg.src = `img/ball/${ballNum}.png`;
+		updateSelectedBall(ballNum);
 	});
+
+    updateSelectedBall(ballNum);
 };
  
 //let skills = {};
