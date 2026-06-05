@@ -22,6 +22,13 @@ class Ball {
     }
 
     draw() {
+        // 관통 공은 일반 공과 같은 이미지를 쓰더라도 플레이 중 바로 구분되도록 반투명하게 그립니다.
+        // save/restore로 투명도 설정이 다른 공이나 UI 렌더링에 번지지 않게 합니다.
+        context.save();
+        if (this.isPenetrationBall) {
+            context.globalAlpha = 0.55;
+        }
+
         // 선택한 공 이미지가 있으면 원 대신 이미지로 공을 그립니다.
         if (
             typeof selectedBallFrames !== "undefined" &&
@@ -49,6 +56,7 @@ class Ball {
                 this.radius * 2,
                 this.radius * 2
                 );
+        context.restore();
         return;
     }
 }
@@ -58,6 +66,7 @@ context.fillStyle = this.color;
 context.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
 context.fill();
 context.closePath();
+context.restore();
 }
 
 update() {
