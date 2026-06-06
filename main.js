@@ -41,6 +41,22 @@ const playBgm = (name) => {
     });
 };
 
+const unlockAudio = () => {
+    const name = currentBgmName || "menu";
+
+    if (isBgmOn) {
+        playBgm(name);
+    }
+
+    document.removeEventListener("pointerdown", unlockAudio);
+    document.removeEventListener("keydown", unlockAudio);
+    document.removeEventListener("touchstart", unlockAudio);
+};
+
+document.addEventListener("pointerdown", unlockAudio);
+document.addEventListener("keydown", unlockAudio);
+document.addEventListener("touchstart", unlockAudio);
+
 const setBgmOn = (value) => {
     isBgmOn = value;
 
