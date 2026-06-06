@@ -1822,7 +1822,7 @@ const updateUi = () => {
 
     bossLifeText.innerText = `보스 체력 : ${bossLife >= 0 ? bossLife : 0} / ${totBossLife}`;
     lifeText.innerText = `내 체력 : ${life >= 0 ? life : 0} / ${totLife}`;
-    countText.innerText = `남은 부메랑 : ${count}`;
+    countText.innerText = `남은 무기 : ${count}`;
 
     updateSkillUi();
 
