@@ -495,13 +495,13 @@ const level1Setting = () => {
     totLife = 100;
     count = 5;
     power = 20;
-    totBossLife = 500;
+    totBossLife = 300;
 }
 const level2Setting = () => {
     totLife = 100;
     count = 5;
     power = 20;
-    totBossLife = 800;
+    totBossLife = 600;
 }
 const level3Setting = () => {
     totLife = 100;
@@ -793,7 +793,7 @@ const bossPatternConfigs = {
             count: 8,
             radius: 14,
             speed:  4,
-            damage: 5
+            damage: 10
         },
         {
             id: "moth_wind",
@@ -832,7 +832,7 @@ const bossPatternConfigs = {
             width: 80,
             height: 180,
             speed: 12,
-            damage: 10
+            damage: 20
         },
         {
             id: "agahnim_double_fireball",
@@ -841,7 +841,7 @@ const bossPatternConfigs = {
             imageSrc: "img/bossSkill/agahnim_fireball.png",
             radius: 55,
             speed: 7,
-            damage: 15
+            damage: 20
         },
         {
             id: "agahnim_bat_missile",
@@ -854,7 +854,7 @@ const bossPatternConfigs = {
             xSpeed: 3,
             ySpeed: 5,
 
-            damage: 12
+            damage: 25
         }
     ],
 
@@ -878,8 +878,8 @@ const bossPatternConfigs = {
     // 다음 쇼크웨이브 묶음까지의 시간
             waveInterval: 900,
 
-            damage: 12,
-            enragedDamage: 20
+            damage: 30,
+            enragedDamage: 35
         },
         {
             id: "ganon_fire",
@@ -899,8 +899,8 @@ const bossPatternConfigs = {
             width: 120,
             height: 120,
 
-            damage: 4,
-            enragedDamage: 7
+            damage: 10,
+            enragedDamage: 12
         },
         {
             id: "ganon_trident",
@@ -915,8 +915,8 @@ const bossPatternConfigs = {
             height: 100,
             speed: 7,
 
-            damage: 16,
-            enragedDamage: 25
+            damage: 35,
+            enragedDamage: 40
         }
     ]
 };
