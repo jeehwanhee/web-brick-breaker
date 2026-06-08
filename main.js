@@ -156,7 +156,7 @@ function updateStageScorePanel() {
         `클리어 스테이지 : ${result.clearedLevel}\n` +
         `보스 처치 점수 : +${result.bossScore}\n` +
         `남은 체력 점수 : +${result.lifeScore}\n` +
-        `남은 탄창 점수 : +${result.ammoScore}\n` +
+        `남은 무기 점수 : +${result.ammoScore}\n` +
         `노데미지 클리어 : +${result.noDamageScore}\n` +
         `시간 패널티 : -${result.timePenalty} (${result.elapsedSeconds}초)\n` +
         `이번 정산 점수 : ${result.bonusTotal >= 0 ? "+" : ""}${result.bonusTotal}\n` +
