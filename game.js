@@ -143,7 +143,29 @@ window.addEventListener("load", () => {
             controlButton.innerText = "pause";
             isRunning = true;
             if (pausedAt !== 0) {
-                totalPausedTime += Date.now() - pausedAt;
+                const pausedDuration = Date.now() - pausedAt;
+
+                totalPausedTime += pausedDuration;
+
+                skillStates.forEach((state) => {
+                    if (!state || !state.name) return;
+
+                    const config = skillData[state.name];
+                    if (!config) return;
+
+                    const cooldownEndTime = state.lastUsed + config.cooldown;
+
+                    // pause 시점에 아직 쿨타임이 남아 있던 스킬만 쿨타임 밀기
+                    if (state.lastUsed !== 0 && cooldownEndTime > pausedAt) {
+                        state.lastUsed += pausedDuration;
+                    }
+
+                    // pause 시점에 아직 효과 지속시간이 남아 있던 스킬만 지속시간 밀기
+                    if (state.activeUntil !== 0 && state.activeUntil > pausedAt) {
+                        state.activeUntil += pausedDuration;
+                    }
+                });
+
                 pausedAt = 0;
             }
             startStageTimerIfNeeded();
